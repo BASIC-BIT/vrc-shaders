@@ -1,42 +1,74 @@
 Shader "Custom/RainbowHeartburstIris" {
     Properties {
-        // Animation and effect controls
+        [Header(Main Controls)]
+        [Toggle(_ENABLE_HEART)] _EnableHeart("Enable Heart Pupil", Float) = 1
+        [Toggle(_ENABLE_RAINBOW)] _EnableRainbow("Enable Rainbow Iris", Float) = 1
+        [Toggle(_ENABLE_NOISE)] _EnableNoise("Enable Noise Effects", Float) = 1
+        [Toggle(_ENABLE_SUNBURST)] _EnableSunburst("Enable Sunburst Streaks", Float) = 1
+        [Toggle(_ENABLE_MIRROR)] _EnableMirror("Enable Infinite Mirror", Float) = 1
+        [Toggle(_RESPOND_TO_LIGHT)] _RespondToLight("Respond To Environment Light", Float) = 1
+        
+        [Space(10)]
+        [Header(Animation Controls)]
         _HeartPulseIntensity ("Heart Pulse Intensity", Range(0,1)) = 0.5
         _RingRotationSpeed ("Ring Rotation Speed", Range(0,1)) = 0.3
-        _IrisSparkleIntensity ("Iris Sparkle Intensity", Range(0,1)) = 0.5
-        _InfiniteDepthStrength ("Infinite Depth Strength", Range(0,1)) = 0.7
-        _InfiniteBlurStrength ("Infinite Blur Strength", Range(0,1)) = 0.5
-        _SunburstLayerCount ("Sunburst Layer Count", Range(1,5)) = 3
-        _SunburstRotationSpeed ("Sunburst Rotation Speed", Range(0,1)) = 0.2
-        _FlareIntensityThreshold ("Flare Intensity Threshold", Range(0,1)) = 0.3
-        _EnvironmentLightingAmount ("Environment Lighting Amount", Range(0,1)) = 0.2
         
-        // Heart pupil controls
+        [Space(10)]
+        [Header(Heart Pupil Settings)]
         _HeartPupilColor ("Heart Pupil Color", Color) = (0.1,0.02,0.05,0.8)
-        _HeartTexture ("Heart Texture", 2D) = "white" {}
+        [NoScaleOffset] _HeartTexture ("Heart Texture", 2D) = "white" {}
         _HeartPupilSize ("Heart Pupil Size", Range(0.1,2.0)) = 1.0
         _HeartPositionX ("Heart Position X", Range(-0.5,0.5)) = 0.0
         _HeartPositionY ("Heart Position Y", Range(-0.5,0.5)) = 0.0
         _HeartBlendMode ("Heart Blend Mode", Range(0,1)) = 0.5
         _HeartGradientAmount ("Heart Gradient Amount", Range(0,1)) = 0.2
         
-        // Iris texture controls
+        [Space(10)]
+        [Header(Rainbow Iris Settings)]
+        [NoScaleOffset] _RainbowGradientTex ("Rainbow Gradient", 2D) = "white" {}
+        _RingCount ("Ring Count", Range(1, 16)) = 8
+        _IrisSparkleIntensity ("Iris Sparkle Intensity", Range(0,1)) = 0.5
+        
+        [Space(10)]
+        [Header(Noise Effect Settings)]
+        [NoScaleOffset] _NoiseTexture ("Noise Texture", 2D) = "black" {}
         _IrisNoiseIntensity ("Iris Noise Intensity", Range(0,1)) = 0.3
         _IrisNoiseScale ("Iris Noise Scale", Range(1,20)) = 10.0
         _IrisNoiseSpeed ("Iris Noise Speed", Range(0,2)) = 0.5
         
-        // Screen-space lens flare controls
+        [Space(10)]
+        [Header(Infinite Mirror Settings)]
+        _InfiniteDepthStrength ("Infinite Depth Strength", Range(0,1)) = 0.7
+        _InfiniteBlurStrength ("Infinite Blur Strength", Range(0,1)) = 0.5
+        _InfiniteLayerCount ("Infinite Layer Count", Range(1,8)) = 5
+        
+        [Space(10)]
+        [Header(Sunburst Settings)]
+        _SunburstLayerCount ("Sunburst Layer Count", Range(1,5)) = 3
+        _SunburstRotationSpeed ("Sunburst Rotation Speed", Range(0,1)) = 0.2
+        _SunburstIntensity ("Sunburst Intensity", Range(0,1)) = 0.5
+        
+        [Space(10)]
+        [Header(Lens Flare Settings)]
+        [Toggle(_ENABLE_FLARE)] _EnableFlare("Enable Lens Flare", Float) = 1
+        _FlareIntensityThreshold ("Flare Intensity Threshold", Range(0,1)) = 0.3
         _FlareColor ("Flare Color", Color) = (1,0.8,0.4,1)
         _FlareSize ("Flare Size", Range(0,3)) = 1.0
         _FlareRays ("Flare Rays", Range(0,32)) = 8
         _FlareBloom ("Flare Bloom", Range(0,2)) = 0.5
         
-        // Core textures and colors
-        _RainbowGradientTex ("Rainbow Gradient", 2D) = "white" {}
-        _NoiseTexture ("Noise Texture", 2D) = "black" {}
+        [Space(10)]
+        [Header(Environment Settings)]
+        _EnvironmentLightingAmount ("Environment Lighting Amount", Range(0,1)) = 0.2
         
-        // AudioLink texture (automatically populated by AudioLink system)
-        _AudioLink ("AudioLink Texture", 2D) = "black" {}
+        [Space(10)]
+        [Header(Advanced Settings)]
+        // An ID used to coordinate with the lens flare shader
+        _EyeID ("Eye ID (0-7)", Range(0,7)) = 0
+        _EyeCenter ("Eye Center (World Space)", Vector) = (0,0,0,0)
+        
+        // Hidden properties
+        [HideInInspector] _AudioLink ("AudioLink Texture", 2D) = "black" {}
     }
     
     SubShader {
@@ -54,19 +86,22 @@ Shader "Custom/RainbowHeartburstIris" {
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            
+            // Feature toggles
+            #pragma shader_feature_local _ENABLE_HEART
+            #pragma shader_feature_local _ENABLE_RAINBOW
+            #pragma shader_feature_local _ENABLE_NOISE
+            #pragma shader_feature_local _ENABLE_SUNBURST
+            #pragma shader_feature_local _ENABLE_MIRROR
+            #pragma shader_feature_local _RESPOND_TO_LIGHT
+            #pragma shader_feature_local _ENABLE_FLARE
+            
             #include "UnityCG.cginc"
             #include "Packages/com.llealloo.audiolink/Runtime/Shaders/AudioLink.cginc"
             
-            // Properties
+            // Animation properties
             uniform float _HeartPulseIntensity;
             uniform float _RingRotationSpeed;
-            uniform float _IrisSparkleIntensity;
-            uniform float _InfiniteDepthStrength;
-            uniform float _InfiniteBlurStrength;
-            uniform float _SunburstLayerCount;
-            uniform float _SunburstRotationSpeed;
-            uniform float _FlareIntensityThreshold;
-            uniform float _EnvironmentLightingAmount;
             
             // Heart pupil properties
             uniform float4 _HeartPupilColor;
@@ -77,13 +112,42 @@ Shader "Custom/RainbowHeartburstIris" {
             uniform float _HeartBlendMode;
             uniform float _HeartGradientAmount;
             
-            // Iris noise properties
+            // Rainbow iris properties
+            uniform sampler2D _RainbowGradientTex;
+            uniform float _RingCount;
+            uniform float _IrisSparkleIntensity;
+            
+            // Noise properties
+            uniform sampler2D _NoiseTexture;
             uniform float _IrisNoiseIntensity;
             uniform float _IrisNoiseScale;
             uniform float _IrisNoiseSpeed;
             
-            uniform sampler2D _RainbowGradientTex;
-            uniform sampler2D _NoiseTexture;
+            // Infinite mirror properties
+            uniform float _InfiniteDepthStrength;
+            uniform float _InfiniteBlurStrength;
+            uniform float _InfiniteLayerCount;
+            
+            // Sunburst properties
+            uniform float _SunburstLayerCount;
+            uniform float _SunburstRotationSpeed;
+            uniform float _SunburstIntensity;
+            
+            // Lens flare properties
+            uniform float _FlareIntensityThreshold;
+            uniform float4 _FlareColor;
+            uniform float _FlareSize;
+            uniform float _FlareRays;
+            uniform float _FlareBloom;
+            
+            // Environment properties
+            uniform float _EnvironmentLightingAmount;
+            
+            // Coordination properties
+            uniform float _EyeID;
+            uniform float4 _EyeCenter;
+            
+            // AudioLink texture
             uniform sampler2D _AudioLink;
             
             struct appdata {
@@ -181,6 +245,9 @@ Shader "Custom/RainbowHeartburstIris" {
             }
             
             fixed4 frag (v2f i) : SV_Target {
+                // Store eye center in world space for the lens flare shader to use
+                _EyeCenter = float4(i.worldPos.xyz, 1.0);
+                
                 // ============= AudioLink Integration =============
                 float audioLinkAvailable = AudioLinkIsAvailable();
                 float bass = 0;
@@ -204,31 +271,45 @@ Shader "Custom/RainbowHeartburstIris" {
                 }
                 
                 // ============= Heart-shaped Pupil =============
+                float heartMask = 0;
+                
+                #if _ENABLE_HEART
                 // Calculate heart size including base size and pulse effect
                 float heartSize = _HeartPupilSize * (1.0 + _HeartPulseIntensity * bass * 0.2);
                 
                 // Get heart mask from texture
-                float heartMask = getHeartMask(i.uv, heartSize);
+                heartMask = getHeartMask(i.uv, heartSize);
+                #endif
                 
                 // ============= Dynamic Iris Noise =============
+                float irisNoise = 0.5;
+                float dynamicNoiseIntensity = 0;
+                
+                #if _ENABLE_NOISE
                 // Create animated noise coordinates
                 float2 noiseUV = i.uv * _IrisNoiseScale;
                 noiseUV += _Time.y * _IrisNoiseSpeed;
                 
                 // Generate fractal noise
-                float irisNoise = fractalNoise(noiseUV, 3);
+                irisNoise = fractalNoise(noiseUV, 3);
                 
                 // Audio-reactive noise intensity
-                float dynamicNoiseIntensity = _IrisNoiseIntensity * (1.0 + highMid * 0.3);
+                dynamicNoiseIntensity = _IrisNoiseIntensity * (1.0 + highMid * 0.3);
+                #endif
                 
                 // ============= Rainbow Iris Rings =============
+                float4 rainbowColor = float4(0,0,0,0);
+                
+                #if _ENABLE_RAINBOW
                 float2 centeredUV = i.uv - 0.5;
                 float dist = length(centeredUV);
-                float ringCount = 8.0;
                 
                 // Apply noise distortion to the distance calculation
+                #if _ENABLE_NOISE
                 dist += (irisNoise - 0.5) * dynamicNoiseIntensity * 0.1;
-                float ringIndex = frac(dist * ringCount);
+                #endif
+                
+                float ringIndex = frac(dist * _RingCount);
                 
                 // Rotation over time
                 float angle = atan2(centeredUV.y, centeredUV.x);
@@ -240,7 +321,7 @@ Shader "Custom/RainbowHeartburstIris" {
                 
                 // Sample rainbow gradient based on distance from center
                 float2 rainbowUV = float2(ringIndex, 0.5);
-                fixed4 rainbowColor = tex2D(_RainbowGradientTex, rainbowUV);
+                rainbowColor = tex2D(_RainbowGradientTex, rainbowUV);
                 
                 // Audio-reactive sparkle
                 float sparkle = tex2D(_NoiseTexture, i.uv * 5.0 + _Time.y).r;
@@ -248,20 +329,36 @@ Shader "Custom/RainbowHeartburstIris" {
                 rainbowColor += sparkle * sparkleIntensity;
                 
                 // Apply iris noise to color
+                #if _ENABLE_NOISE
                 float3 noiseColor = tex2D(_RainbowGradientTex, float2(irisNoise, 0.5)).rgb;
                 rainbowColor.rgb = lerp(rainbowColor.rgb, noiseColor, dynamicNoiseIntensity * 0.2);
+                #endif
+                #else
+                // Default color if rainbow is disabled
+                rainbowColor = float4(0.1, 0.1, 0.2, 1.0);
+                #endif
                 
                 // ============= Infinite Mirror Depth Effect =============
-                float4 mirrorColor = float4(0,0,0,0);
+                float4 mirrorColor = rainbowColor;
+                
+                #if _ENABLE_MIRROR
+                mirrorColor = float4(0,0,0,0);
                 float totalWeight = 0;
                 
+                // Get layer count based on parameter
+                int layerCount = max(1, min(8, (int)_InfiniteLayerCount));
+                
                 // Loop through multiple depth layers
-                for (int layerIdx = 0; layerIdx < 5; layerIdx++) {
-                    float depth = 1.0 - (layerIdx / 5.0) * _InfiniteDepthStrength;
+                for (int layerIdx = 0; layerIdx < layerCount; layerIdx++) {
+                    float depth = 1.0 - (layerIdx / (float)layerCount) * _InfiniteDepthStrength;
                     float2 scaledUV = (i.uv - 0.5) * depth + 0.5;
                     
                     // Heart mask for this layer
-                    float layerHeartMask = getHeartMask(scaledUV, heartSize);
+                    float layerHeartMask = 0;
+                    #if _ENABLE_HEART
+                    float heartSize = _HeartPupilSize * (1.0 + _HeartPulseIntensity * bass * 0.2);
+                    layerHeartMask = getHeartMask(scaledUV, heartSize);
+                    #endif
                     
                     // Calculate blur based on depth
                     float blurAmount = layerIdx * _InfiniteBlurStrength * 0.05;
@@ -270,10 +367,12 @@ Shader "Custom/RainbowHeartburstIris" {
                     float layerDist = length(scaledUV - 0.5);
                     
                     // Apply noise to each layer differently
+                    #if _ENABLE_NOISE
                     float layerNoise = fractalNoise(scaledUV * _IrisNoiseScale + float2(layerIdx * 0.1, 0), 2);
-                    layerDist += (layerNoise - 0.5) * dynamicNoiseIntensity * 0.1 * (layerIdx + 1) / 5.0;
+                    layerDist += (layerNoise - 0.5) * dynamicNoiseIntensity * 0.1 * (layerIdx + 1) / (float)layerCount;
+                    #endif
                     
-                    float layerRingIndex = frac(layerDist * ringCount);
+                    float layerRingIndex = frac(layerDist * _RingCount);
                     float2 layerRainbowUV = float2(layerRingIndex, 0.5);
                     float4 layerColor = SampleWithBlur(_RainbowGradientTex, layerRainbowUV, blurAmount);
                     
@@ -284,11 +383,17 @@ Shader "Custom/RainbowHeartburstIris" {
                 }
                 
                 // Normalize accumulated color
-                mirrorColor = totalWeight > 0 ? mirrorColor / totalWeight : mirrorColor;
+                if (totalWeight > 0) {
+                    mirrorColor = mirrorColor / totalWeight;
+                } else {
+                    mirrorColor = rainbowColor;
+                }
+                #endif
                 
                 // ============= Animated Parallax Sunburst Streaks =============
                 float4 sunburstColor = float4(0,0,0,0);
                 
+                #if _ENABLE_SUNBURST
                 // Get integer count for sunburst layers
                 int sunburstCount = max(1, min(5, (int)_SunburstLayerCount));
                 
@@ -311,27 +416,36 @@ Shader "Custom/RainbowHeartburstIris" {
                     streakMask = pow(streakMask, 5.0) * exp(-length(rotatedUV - 0.5) * 5.0);
                     
                     // Add noise to streaks
+                    #if _ENABLE_NOISE
                     float streakNoise = fractalNoise(rotatedUV * 8.0 + float2(0, j * 0.5), 2);
                     streakMask *= 0.8 + streakNoise * 0.4;
+                    #endif
                     
                     // Add to final color with rainbow tint based on angle
                     float hue = frac(streakAngle / (2.0 * 3.14159) + _Time.y * 0.1);
                     float2 streakUV = float2(hue, 0.5);
                     float4 streakColor = tex2D(_RainbowGradientTex, streakUV);
                     
-                    sunburstColor += streakMask * streakColor * 0.2;
+                    sunburstColor += streakMask * streakColor * _SunburstIntensity;
                 }
+                #endif
                 
                 // ============= Combine Effects =============
                 // Start with base rainbow color
                 float4 finalColor = rainbowColor;
                 
-                // Blend in mirror effect
+                // Blend in mirror effect if enabled
+                #if _ENABLE_MIRROR
                 finalColor = lerp(finalColor, mirrorColor, 0.5);
+                #endif
                 
-                // Add sunburst streaks
+                // Add sunburst streaks if enabled
+                #if _ENABLE_SUNBURST
                 finalColor += sunburstColor;
+                #endif
                 
+                // Apply heart pupil if enabled
+                #if _ENABLE_HEART
                 // Create a heart color that incorporates some of the rainbow gradient
                 float4 heartColor = _HeartPupilColor;
                 
@@ -354,10 +468,13 @@ Shader "Custom/RainbowHeartburstIris" {
                 
                 // Choose between blend modes
                 finalColor = lerp(alphaBlend, overlayBlend, _HeartBlendMode);
+                #endif
                 
                 // ============= Apply Environment Lighting =============
+                #if _RESPOND_TO_LIGHT
                 fixed3 ambientLight = UNITY_LIGHTMODEL_AMBIENT.rgb;
                 finalColor.rgb = lerp(finalColor.rgb, finalColor.rgb * ambientLight * 2.0, _EnvironmentLightingAmount);
+                #endif
                 
                 // Keep alpha at 1 for the iris
                 finalColor.a = 1.0;
@@ -376,6 +493,8 @@ Shader "Custom/RainbowHeartburstIris" {
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            #pragma shader_feature_local _ENABLE_FLARE
+            
             #include "UnityCG.cginc"
             
             // Properties
@@ -398,6 +517,9 @@ Shader "Custom/RainbowHeartburstIris" {
             uniform float _FlareRays;
             uniform float _FlareBloom;
             
+            // Coordination properties for external flare shader
+            uniform float _EyeID;
+            
             struct appdata {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
@@ -409,6 +531,7 @@ Shader "Custom/RainbowHeartburstIris" {
                 float2 uv : TEXCOORD0;
                 float4 grabPos : TEXCOORD1;
                 float3 worldPos : TEXCOORD2;
+                float4 screenPos : TEXCOORD3;
             };
             
             // Get heart mask from texture
@@ -440,6 +563,9 @@ Shader "Custom/RainbowHeartburstIris" {
                 
                 // Get world position for calculating flare direction
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
+                
+                // Get screen position for coordinating with external flare shader
+                o.screenPos = ComputeScreenPos(o.pos);
                 
                 return o;
             }
@@ -489,6 +615,11 @@ Shader "Custom/RainbowHeartburstIris" {
             }
             
             fixed4 frag (v2f i) : SV_Target {
+                // Skip rendering if flares are disabled
+                #if !_ENABLE_FLARE
+                return fixed4(0,0,0,0);
+                #endif
+                
                 // Basic animation for pulse effect
                 float bass = 0.5 + sin(_Time.y) * 0.1; 
                 
@@ -528,7 +659,10 @@ Shader "Custom/RainbowHeartburstIris" {
                 
                 // Combine heart glow with flare
                 float3 finalColor = flare.rgb * flareMask + 
-                                    heartGlow * _HeartPupilColor.rgb * (1.0 - flareMask);
+                                   heartGlow * _HeartPupilColor.rgb * (1.0 - flareMask);
+                
+                // Store information for external flare shader to use
+                // The external shader will use _EyeID to know which eye coordinates to use
                 
                 // No alpha in additive blend mode
                 return fixed4(finalColor, 0);
@@ -537,5 +671,6 @@ Shader "Custom/RainbowHeartburstIris" {
         }
     }
     
+    CustomEditor "RainbowHeartburstIrisGUI"
     FallBack "Diffuse"
 } 
