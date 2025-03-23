@@ -11,8 +11,27 @@ Shader "Custom/RainbowHeartburstIris" {
         _FlareIntensityThreshold ("Flare Intensity Threshold", Range(0,1)) = 0.3
         _EnvironmentLightingAmount ("Environment Lighting Amount", Range(0,1)) = 0.2
         
+        // Heart pupil controls
+        _HeartPupilColor ("Heart Pupil Color", Color) = (0.1,0.02,0.05,0.8)
+        _HeartTexture ("Heart Texture", 2D) = "white" {}
+        _HeartPupilSize ("Heart Pupil Size", Range(0.1,2.0)) = 1.0
+        _HeartPositionX ("Heart Position X", Range(-0.5,0.5)) = 0.0
+        _HeartPositionY ("Heart Position Y", Range(-0.5,0.5)) = 0.0
+        _HeartBlendMode ("Heart Blend Mode", Range(0,1)) = 0.5
+        _HeartGradientAmount ("Heart Gradient Amount", Range(0,1)) = 0.2
+        
+        // Iris texture controls
+        _IrisNoiseIntensity ("Iris Noise Intensity", Range(0,1)) = 0.3
+        _IrisNoiseScale ("Iris Noise Scale", Range(1,20)) = 10.0
+        _IrisNoiseSpeed ("Iris Noise Speed", Range(0,2)) = 0.5
+        
+        // Screen-space lens flare controls
+        _FlareColor ("Flare Color", Color) = (1,0.8,0.4,1)
+        _FlareSize ("Flare Size", Range(0,3)) = 1.0
+        _FlareRays ("Flare Rays", Range(0,32)) = 8
+        _FlareBloom ("Flare Bloom", Range(0,2)) = 0.5
+        
         // Core textures and colors
-        _HeartPupilColor ("Heart Pupil Color", Color) = (0.1,0.02,0.05,1)
         _RainbowGradientTex ("Rainbow Gradient", 2D) = "white" {}
         _NoiseTexture ("Noise Texture", 2D) = "black" {}
         
@@ -22,12 +41,16 @@ Shader "Custom/RainbowHeartburstIris" {
     
     SubShader {
         Tags {"Queue"="Transparent+1" "RenderType"="Transparent"}
-        Blend SrcAlpha OneMinusSrcAlpha
         ZWrite Off
         Cull Back
         
-        // Main pass
+        // Grab the screen behind the object into _GrabTexture
+        GrabPass { "_GrabTexture" }
+        
+        // Main pass - iris and heart pupil
         Pass {
+            Blend SrcAlpha OneMinusSrcAlpha
+            
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -44,7 +67,21 @@ Shader "Custom/RainbowHeartburstIris" {
             uniform float _SunburstRotationSpeed;
             uniform float _FlareIntensityThreshold;
             uniform float _EnvironmentLightingAmount;
+            
+            // Heart pupil properties
             uniform float4 _HeartPupilColor;
+            uniform sampler2D _HeartTexture;
+            uniform float _HeartPupilSize;
+            uniform float _HeartPositionX;
+            uniform float _HeartPositionY;
+            uniform float _HeartBlendMode;
+            uniform float _HeartGradientAmount;
+            
+            // Iris noise properties
+            uniform float _IrisNoiseIntensity;
+            uniform float _IrisNoiseScale;
+            uniform float _IrisNoiseSpeed;
+            
             uniform sampler2D _RainbowGradientTex;
             uniform sampler2D _NoiseTexture;
             uniform sampler2D _AudioLink;
@@ -71,12 +108,23 @@ Shader "Custom/RainbowHeartburstIris" {
                 return mul(rotMatrix, uv);
             }
             
-            // SDF heart function
-            float heartSDF(float2 uv, float size) {
-                uv = (uv - 0.5) * 2.0; // Center and scale
-                float2 q = float2(abs(uv.x), uv.y);
-                float d = length(q - float2(0.25, -0.3)) - 0.5;
-                return d * (1.0/size); // Negative inside heart, positive outside
+            // Get heart mask from texture
+            float getHeartMask(float2 uv, float size) {
+                // Adjust for position offset
+                float2 heartUV = uv - float2(_HeartPositionX, _HeartPositionY);
+                
+                // Scale the UVs for sizing (we need to work in 0-1 UV space)
+                float2 scaledUV = (heartUV - 0.5) / size + 0.5;
+                
+                // Sample the heart texture's alpha channel as the mask
+                float heartMask = 0;
+                
+                // Only sample if UVs are within 0-1 range
+                if (scaledUV.x >= 0 && scaledUV.x <= 1 && scaledUV.y >= 0 && scaledUV.y <= 1) {
+                    heartMask = tex2D(_HeartTexture, scaledUV).a;
+                }
+                
+                return heartMask;
             }
             
             // Simple multi-tap blur function
@@ -96,6 +144,26 @@ Shader "Custom/RainbowHeartburstIris" {
                 color += tex2D(tex, uv - float2(0, blurAmount)) * 0.125;
                 
                 return color;
+            }
+            
+            // Perlin-like noise function
+            float noise(float2 uv) {
+                return tex2D(_NoiseTexture, uv).r;
+            }
+            
+            // Fractal noise for more detail
+            float fractalNoise(float2 uv, int octaves) {
+                float value = 0.0;
+                float amplitude = 0.5;
+                float frequency = 1.0;
+                
+                for (int i = 0; i < octaves; i++) {
+                    value += amplitude * noise(uv * frequency);
+                    amplitude *= 0.5;
+                    frequency *= 2.0;
+                }
+                
+                return value;
             }
             
             v2f vert (appdata v) {
@@ -136,14 +204,30 @@ Shader "Custom/RainbowHeartburstIris" {
                 }
                 
                 // ============= Heart-shaped Pupil =============
-                float pulseSize = 1.0 + _HeartPulseIntensity * bass * 0.2;
-                float heartDistance = heartSDF(i.uv, pulseSize);
-                float heartMask = smoothstep(0.01, -0.01, heartDistance);
+                // Calculate heart size including base size and pulse effect
+                float heartSize = _HeartPupilSize * (1.0 + _HeartPulseIntensity * bass * 0.2);
+                
+                // Get heart mask from texture
+                float heartMask = getHeartMask(i.uv, heartSize);
+                
+                // ============= Dynamic Iris Noise =============
+                // Create animated noise coordinates
+                float2 noiseUV = i.uv * _IrisNoiseScale;
+                noiseUV += _Time.y * _IrisNoiseSpeed;
+                
+                // Generate fractal noise
+                float irisNoise = fractalNoise(noiseUV, 3);
+                
+                // Audio-reactive noise intensity
+                float dynamicNoiseIntensity = _IrisNoiseIntensity * (1.0 + highMid * 0.3);
                 
                 // ============= Rainbow Iris Rings =============
                 float2 centeredUV = i.uv - 0.5;
                 float dist = length(centeredUV);
                 float ringCount = 8.0;
+                
+                // Apply noise distortion to the distance calculation
+                dist += (irisNoise - 0.5) * dynamicNoiseIntensity * 0.1;
                 float ringIndex = frac(dist * ringCount);
                 
                 // Rotation over time
@@ -163,6 +247,10 @@ Shader "Custom/RainbowHeartburstIris" {
                 float sparkleIntensity = _IrisSparkleIntensity * highMid;
                 rainbowColor += sparkle * sparkleIntensity;
                 
+                // Apply iris noise to color
+                float3 noiseColor = tex2D(_RainbowGradientTex, float2(irisNoise, 0.5)).rgb;
+                rainbowColor.rgb = lerp(rainbowColor.rgb, noiseColor, dynamicNoiseIntensity * 0.2);
+                
                 // ============= Infinite Mirror Depth Effect =============
                 float4 mirrorColor = float4(0,0,0,0);
                 float totalWeight = 0;
@@ -173,22 +261,26 @@ Shader "Custom/RainbowHeartburstIris" {
                     float2 scaledUV = (i.uv - 0.5) * depth + 0.5;
                     
                     // Heart mask for this layer
-                    float layerHeartDist = heartSDF(scaledUV, pulseSize);
-                    float layerMask = smoothstep(0.01, -0.01, layerHeartDist);
+                    float layerHeartMask = getHeartMask(scaledUV, heartSize);
                     
                     // Calculate blur based on depth
                     float blurAmount = layerIdx * _InfiniteBlurStrength * 0.05;
                     
                     // Use rings for the color but apply progressive blur
                     float layerDist = length(scaledUV - 0.5);
+                    
+                    // Apply noise to each layer differently
+                    float layerNoise = fractalNoise(scaledUV * _IrisNoiseScale + float2(layerIdx * 0.1, 0), 2);
+                    layerDist += (layerNoise - 0.5) * dynamicNoiseIntensity * 0.1 * (layerIdx + 1) / 5.0;
+                    
                     float layerRingIndex = frac(layerDist * ringCount);
                     float2 layerRainbowUV = float2(layerRingIndex, 0.5);
                     float4 layerColor = SampleWithBlur(_RainbowGradientTex, layerRainbowUV, blurAmount);
                     
                     // Accumulate with depth-based weight
                     float weight = exp(-layerIdx * 0.5);
-                    mirrorColor += layerColor * layerMask * weight;
-                    totalWeight += weight * layerMask;
+                    mirrorColor += layerColor * layerHeartMask * weight;
+                    totalWeight += weight * layerHeartMask;
                 }
                 
                 // Normalize accumulated color
@@ -218,6 +310,10 @@ Shader "Custom/RainbowHeartburstIris" {
                     float streakMask = (sin(streakAngle * 20.0) * 0.5 + 0.5);
                     streakMask = pow(streakMask, 5.0) * exp(-length(rotatedUV - 0.5) * 5.0);
                     
+                    // Add noise to streaks
+                    float streakNoise = fractalNoise(rotatedUV * 8.0 + float2(0, j * 0.5), 2);
+                    streakMask *= 0.8 + streakNoise * 0.4;
+                    
                     // Add to final color with rainbow tint based on angle
                     float hue = frac(streakAngle / (2.0 * 3.14159) + _Time.y * 0.1);
                     float2 streakUV = float2(hue, 0.5);
@@ -236,8 +332,28 @@ Shader "Custom/RainbowHeartburstIris" {
                 // Add sunburst streaks
                 finalColor += sunburstColor;
                 
-                // Apply heart pupil (darkens the center)
-                finalColor = lerp(finalColor, _HeartPupilColor, heartMask);
+                // Create a heart color that incorporates some of the rainbow gradient
+                float4 heartColor = _HeartPupilColor;
+                
+                // Sample rainbow at heart position for gradient effect
+                float2 heartGradientUV = float2(frac(_Time.y * 0.1), 0.5);
+                float4 heartGradient = tex2D(_RainbowGradientTex, heartGradientUV);
+                
+                // Blend heart color with gradient based on parameter
+                heartColor.rgb = lerp(heartColor.rgb, heartGradient.rgb, _HeartGradientAmount);
+                
+                // Apply heart to final color with transparency from heart color alpha
+                float effectiveHeartOpacity = heartMask * heartColor.a;
+                
+                // Mix blending modes between overlay and normal alpha blending
+                float4 overlayBlend = lerp(finalColor, heartColor, effectiveHeartOpacity);
+                float4 alphaBlend = float4(
+                    lerp(finalColor.rgb, heartColor.rgb, effectiveHeartOpacity),
+                    finalColor.a
+                );
+                
+                // Choose between blend modes
+                finalColor = lerp(alphaBlend, overlayBlend, _HeartBlendMode);
                 
                 // ============= Apply Environment Lighting =============
                 fixed3 ambientLight = UNITY_LIGHTMODEL_AMBIENT.rgb;
@@ -251,7 +367,7 @@ Shader "Custom/RainbowHeartburstIris" {
             ENDCG
         }
         
-        // Lens flare pass with additive blending
+        // Screen-space lens flare pass using GrabPass
         Pass {
             Blend One One // Additive blending for glow effects
             ZWrite Off
@@ -264,87 +380,158 @@ Shader "Custom/RainbowHeartburstIris" {
             
             // Properties
             uniform float _HeartPulseIntensity;
+            uniform float _HeartPupilSize;
+            uniform float _HeartPositionX;
+            uniform float _HeartPositionY;
             uniform float _FlareIntensityThreshold;
             uniform float4 _HeartPupilColor;
+            uniform sampler2D _HeartTexture;
             uniform sampler2D _RainbowGradientTex;
             uniform sampler2D _AudioLink;
+            
+            // Grab pass texture from previous pass
+            uniform sampler2D _GrabTexture;
+            
+            // Screen space flare properties
+            uniform float4 _FlareColor;
+            uniform float _FlareSize;
+            uniform float _FlareRays;
+            uniform float _FlareBloom;
             
             struct appdata {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
+                float3 normal : NORMAL;
             };
             
             struct v2f {
                 float4 pos : SV_POSITION;
                 float2 uv : TEXCOORD0;
+                float4 grabPos : TEXCOORD1;
+                float3 worldPos : TEXCOORD2;
             };
             
-            // SDF heart function
-            float heartSDF(float2 uv, float size) {
-                uv = (uv - 0.5) * 2.0; // Center and scale
-                float2 q = float2(abs(uv.x), uv.y);
-                float d = length(q - float2(0.25, -0.3)) - 0.5;
-                return d * (1.0/size); // Negative inside heart, positive outside
-            }
-            
-            // Simple blur function for lens flare
-            float4 SampleWithBlur(sampler2D tex, float2 uv, float blurAmount) {
-                float4 color = float4(0,0,0,0);
+            // Get heart mask from texture
+            float getHeartMask(float2 uv, float size) {
+                // Adjust for position offset
+                float2 heartUV = uv - float2(_HeartPositionX, _HeartPositionY);
                 
-                // 5 tap blur
-                color += tex2D(tex, uv) * 0.5;
-                color += tex2D(tex, uv + float2(blurAmount, 0)) * 0.125;
-                color += tex2D(tex, uv - float2(blurAmount, 0)) * 0.125;
-                color += tex2D(tex, uv + float2(0, blurAmount)) * 0.125;
-                color += tex2D(tex, uv - float2(0, blurAmount)) * 0.125;
+                // Scale the UVs for sizing (we need to work in 0-1 UV space)
+                float2 scaledUV = (heartUV - 0.5) / size + 0.5;
                 
-                return color;
+                // Sample the heart texture's alpha channel as the mask
+                float heartMask = 0;
+                
+                // Only sample if UVs are within 0-1 range
+                if (scaledUV.x >= 0 && scaledUV.x <= 1 && scaledUV.y >= 0 && scaledUV.y <= 1) {
+                    heartMask = tex2D(_HeartTexture, scaledUV).a;
+                }
+                
+                return heartMask;
             }
             
             v2f vert (appdata v) {
                 v2f o;
                 o.pos = UnityObjectToClipPos(v.vertex);
                 o.uv = v.uv;
+                
+                // Calculate grab screen position for screen-space effects
+                o.grabPos = ComputeGrabScreenPos(o.pos);
+                
+                // Get world position for calculating flare direction
+                o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
+                
                 return o;
             }
             
+            // Create lens flare effect
+            float4 createLensFlare(float2 uv, float2 center, float intensity, float4 baseColor) {
+                // Distance from center
+                float2 delta = uv - center;
+                float dist = length(delta);
+                
+                // Normalize direction for ray calculation
+                float2 dir = normalize(delta);
+                
+                // Basic bloom around eye center
+                float bloom = exp(-dist * 10.0 / _FlareSize) * _FlareBloom * intensity;
+                
+                // Create rays emanating from center
+                float rays = 0;
+                if (dist > 0.1) { // Only show rays a bit away from center
+                    float angle = atan2(dir.y, dir.x);
+                    rays = pow(0.5 + 0.5 * sin(angle * _FlareRays), 5.0) * 
+                          exp(-dist * 5.0 / _FlareSize) * intensity;
+                }
+                
+                // Create halo rings
+                float halo = 0;
+                // Inner halo ring
+                float innerRing = abs(dist * 5.0 - 1.0) * 5.0;
+                halo += exp(-innerRing * innerRing) * 0.5;
+                // Outer halo ring (fainter)
+                float outerRing = abs(dist * 2.0 - 1.0) * 10.0;
+                halo += exp(-outerRing * outerRing) * 0.3;
+                
+                // Adjust halo by intensity
+                halo *= intensity * 0.5;
+                
+                // Sample rainbow gradient for color variation based on angle
+                float hueOffset = atan2(dir.y, dir.x) / (2.0 * 3.14159);
+                float4 rainbowColor = tex2D(_RainbowGradientTex, float2(frac(hueOffset + _Time.y * 0.1), 0.5));
+                
+                // Combine effects with color
+                float4 flareColor = baseColor * bloom + 
+                                   baseColor * rays * 0.5 + 
+                                   rainbowColor * halo;
+                
+                return flareColor;
+            }
+            
             fixed4 frag (v2f i) : SV_Target {
-                // Skip AudioLink in second pass to avoid dependency issues
-                // Use simple animation for bass instead
-                float bass = 0.5 + sin(_Time.y) * 0.1;
+                // Basic animation for pulse effect
+                float bass = 0.5 + sin(_Time.y) * 0.1; 
                 
-                // Calculate heart mask for reference
-                float pulseSize = 1.0 + _HeartPulseIntensity * bass * 0.2;
-                float heartDistance = heartSDF(i.uv, pulseSize);
-                float heartMask = smoothstep(0.01, -0.01, heartDistance);
+                // Calculate heart size including base size and pulse effect
+                float heartSize = _HeartPupilSize * (1.0 + _HeartPulseIntensity * bass * 0.2);
                 
-                // Calculate emission from pupil
-                float heartGlow = (1.0 - heartMask) * 0.8;
-                float emissionStrength = heartGlow;
+                // Get heart mask from texture 
+                float heartMask = getHeartMask(i.uv, heartSize);
                 
-                // Add flare boost based on threshold
-                float audioBoost = saturate((bass - _FlareIntensityThreshold) / (1.0 - _FlareIntensityThreshold));
-                emissionStrength *= 1.0 + audioBoost * 2.0;
+                // Generate screen-space position for flare
+                float2 grabUV = i.grabPos.xy / i.grabPos.w;
                 
-                // Apply directional flare
-                float2 flareDir = normalize(i.uv - 0.5);
-                float flareStrength = pow(1.0 - saturate(length(i.uv - 0.5)), 3.0) * audioBoost;
+                // Calculate the center point of the eye in screen space
+                // This is approximately the center of the UV coordinates (0.5, 0.5) projected to screen space
+                float2 eyeCenter = i.grabPos.xy / i.grabPos.w;
+                // Adjust for the relative position within the eye mesh
+                eyeCenter += (0.5 - i.uv) * 0.01; // Small adjustment to center on iris
                 
-                // Sample rainbow for flare color
-                float angle = atan2(flareDir.y, flareDir.x) / (2.0 * 3.14159);
-                float2 flareUV = float2(frac(angle + _Time.y * 0.1), 0.5);
-                float4 flareColor = SampleWithBlur(_RainbowGradientTex, flareUV, 0.1) * flareStrength;
+                // Audio-reactive intensity
+                float flareIntensity = bass;
                 
-                // Only show flare outside the iris area
+                // Flare brightness boost based on threshold
+                float audioBoost = saturate((flareIntensity - _FlareIntensityThreshold) / (1.0 - _FlareIntensityThreshold));
+                flareIntensity = 0.2 + audioBoost * 0.8; // Base intensity plus audio boost
+                
+                // Create screen space lens flare
+                float4 flare = createLensFlare(grabUV, eyeCenter, flareIntensity, _FlareColor);
+                
+                // Heart glow (inverse of heart mask)
+                float heartGlow = (1.0 - heartMask) * 0.8 * audioBoost;
+                
+                // Apply flare only outside the iris area
                 float irisRadius = 0.5;
-                float outsideIris = smoothstep(irisRadius - 0.05, irisRadius, length(i.uv - 0.5));
+                float insideIris = saturate(1.0 - length(i.uv - 0.5) / irisRadius);
+                // Gradually fade flare at iris boundary
+                float flareMask = 1.0 - smoothstep(0.8, 1.0, insideIris);
                 
-                // Final flare color (only visible outside the iris)
-                float3 finalFlareColor = emissionStrength * _HeartPupilColor.rgb * outsideIris * 0.3;
-                finalFlareColor += flareColor.rgb * outsideIris;
+                // Combine heart glow with flare
+                float3 finalColor = flare.rgb * flareMask + 
+                                    heartGlow * _HeartPupilColor.rgb * (1.0 - flareMask);
                 
                 // No alpha in additive blend mode
-                return fixed4(finalFlareColor, 0);
+                return fixed4(finalColor, 0);
             }
             ENDCG
         }
