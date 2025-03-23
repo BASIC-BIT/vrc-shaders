@@ -1,73 +1,64 @@
 Shader "Custom/RainbowHeartburstIris" {
     Properties {
-        [Header(Main Controls)]
-        [Toggle(_ENABLE_HEART)] _EnableHeart("Enable Heart Pupil", Float) = 1
-        [Toggle(_ENABLE_RAINBOW)] _EnableRainbow("Enable Rainbow Iris", Float) = 1
-        [Toggle(_ENABLE_NOISE)] _EnableNoise("Enable Noise Effects", Float) = 1
-        [Toggle(_ENABLE_SUNBURST)] _EnableSunburst("Enable Sunburst Streaks", Float) = 1
-        [Toggle(_ENABLE_MIRROR)] _EnableMirror("Enable Infinite Mirror", Float) = 1
-        [Toggle(_RESPOND_TO_LIGHT)] _RespondToLight("Respond To Environment Light", Float) = 1
+        [HideInInspector] _AnimatedToggle ("Animated Toggle", Float) = 0
         
-        [Space(10)]
         [Header(Animation Controls)]
+        [Space(5)]
         _HeartPulseIntensity ("Heart Pulse Intensity", Range(0,1)) = 0.5
         _RingRotationSpeed ("Ring Rotation Speed", Range(0,1)) = 0.3
         
         [Space(10)]
-        [Header(Heart Pupil Settings)]
-        _HeartPupilColor ("Heart Pupil Color", Color) = (0.1,0.02,0.05,0.8)
-        [NoScaleOffset] _HeartTexture ("Heart Texture", 2D) = "white" {}
-        _HeartPupilSize ("Heart Pupil Size", Range(0.1,2.0)) = 1.0
-        _HeartPositionX ("Heart Position X", Range(-0.5,0.5)) = 0.0
-        _HeartPositionY ("Heart Position Y", Range(-0.5,0.5)) = 0.0
-        _HeartBlendMode ("Heart Blend Mode", Range(0,1)) = 0.5
-        _HeartGradientAmount ("Heart Gradient Amount", Range(0,1)) = 0.2
+        [Header(Heart Pupil)]
+        [Toggle(_ENABLE_HEART)] _EnableHeart("Enable Heart Pupil", Float) = 1
+        [Space(5)]
+        _HeartTexture ("Heart Texture", 2D) = "white" {}
+        _HeartPupilColor ("Heart Color", Color) = (0.1, 0.02, 0.05, 1)
+        _HeartPupilSize ("Heart Size", Range(0.1, 0.5)) = 0.2
+        _HeartPositionX ("Position X", Range(-0.5, 0.5)) = 0
+        _HeartPositionY ("Position Y", Range(-0.5, 0.5)) = 0
+        _HeartBlendMode ("Blend Mode (0=Alpha, 1=Overlay)", Range(0, 1)) = 0
+        _HeartGradientAmount ("Gradient Amount", Range(0, 1)) = 0.3
         
         [Space(10)]
-        [Header(Rainbow Iris Settings)]
-        [NoScaleOffset] _RainbowGradientTex ("Rainbow Gradient", 2D) = "white" {}
-        _RingCount ("Ring Count", Range(1, 16)) = 8
-        _IrisSparkleIntensity ("Iris Sparkle Intensity", Range(0,1)) = 0.5
+        [Header(Rainbow Iris)]
+        [Toggle(_ENABLE_RAINBOW)] _EnableRainbow("Enable Rainbow Iris", Float) = 1
+        [Space(5)]
+        _RainbowGradientTex ("Rainbow Gradient", 2D) = "white" {}
+        _RingCount ("Ring Count", Range(1, 20)) = 10
+        _IrisSparkleIntensity ("Sparkle Intensity", Range(0, 1)) = 0.5
         
         [Space(10)]
-        [Header(Noise Effect Settings)]
-        [NoScaleOffset] _NoiseTexture ("Noise Texture", 2D) = "black" {}
-        _IrisNoiseIntensity ("Iris Noise Intensity", Range(0,1)) = 0.3
-        _IrisNoiseScale ("Iris Noise Scale", Range(1,20)) = 10.0
-        _IrisNoiseSpeed ("Iris Noise Speed", Range(0,2)) = 0.5
+        [Header(Noise Effects)]
+        [Toggle(_ENABLE_NOISE)] _EnableNoise("Enable Noise Effects", Float) = 1
+        [Space(5)]
+        _NoiseTexture ("Noise Texture", 2D) = "black" {}
+        _IrisNoiseIntensity ("Noise Intensity", Range(0, 1)) = 0.3
+        _IrisNoiseScale ("Noise Scale", Range(0.1, 10)) = 4
+        _IrisNoiseSpeed ("Noise Animation Speed", Range(0, 1)) = 0.2
         
         [Space(10)]
-        [Header(Infinite Mirror Settings)]
-        _InfiniteDepthStrength ("Infinite Depth Strength", Range(0,1)) = 0.7
-        _InfiniteBlurStrength ("Infinite Blur Strength", Range(0,1)) = 0.5
-        _InfiniteLayerCount ("Infinite Layer Count", Range(1,8)) = 5
+        [Header(Sunburst Streaks)]
+        [Toggle(_ENABLE_SUNBURST)] _EnableSunburst("Enable Sunburst Streaks", Float) = 1
+        [Space(5)]
+        _SunburstLayerCount ("Layer Count", Range(1, 5)) = 3
+        _SunburstRotationSpeed ("Rotation Speed", Range(0, 1)) = 0.2
+        _SunburstIntensity ("Streak Intensity", Range(0, 1)) = 0.3
         
         [Space(10)]
-        [Header(Sunburst Settings)]
-        _SunburstLayerCount ("Sunburst Layer Count", Range(1,5)) = 3
-        _SunburstRotationSpeed ("Sunburst Rotation Speed", Range(0,1)) = 0.2
-        _SunburstIntensity ("Sunburst Intensity", Range(0,1)) = 0.5
+        [Header(Infinite Mirror)]
+        [Toggle(_ENABLE_MIRROR)] _EnableMirror("Enable Infinite Mirror", Float) = 1
+        [Space(5)]
+        _InfiniteDepthStrength ("Depth Strength", Range(0, 1)) = 0.7
+        _InfiniteBlurStrength ("Blur Strength", Range(0, 1)) = 0.5
+        _InfiniteLayerCount ("Layer Count", Range(1, 8)) = 5
         
         [Space(10)]
-        [Header(Lens Flare Settings)]
-        [Toggle(_ENABLE_FLARE)] _EnableFlare("Enable Lens Flare", Float) = 1
-        _FlareIntensityThreshold ("Flare Intensity Threshold", Range(0,1)) = 0.3
-        _FlareColor ("Flare Color", Color) = (1,0.8,0.4,1)
-        _FlareSize ("Flare Size", Range(0,3)) = 1.0
-        _FlareRays ("Flare Rays", Range(0,32)) = 8
-        _FlareBloom ("Flare Bloom", Range(0,2)) = 0.5
+        [Header(Environment)]
+        [Toggle(_RESPOND_TO_LIGHT)] _RespondToLight("Respond To Environment Light", Float) = 1
+        [Space(5)]
+        _EnvironmentLightingAmount ("Lighting Amount", Range(0, 1)) = 0.2
         
-        [Space(10)]
-        [Header(Environment Settings)]
-        _EnvironmentLightingAmount ("Environment Lighting Amount", Range(0,1)) = 0.2
-        
-        [Space(10)]
-        [Header(Advanced Settings)]
-        // An ID used to coordinate with the lens flare shader
-        _EyeID ("Eye ID (0-7)", Range(0,7)) = 0
-        _EyeCenter ("Eye Center (World Space)", Vector) = (0,0,0,0)
-        
-        // Hidden properties
+        // AudioLink texture (automatically populated by AudioLink system)
         [HideInInspector] _AudioLink ("AudioLink Texture", 2D) = "black" {}
     }
     
@@ -94,7 +85,6 @@ Shader "Custom/RainbowHeartburstIris" {
             #pragma shader_feature_local _ENABLE_SUNBURST
             #pragma shader_feature_local _ENABLE_MIRROR
             #pragma shader_feature_local _RESPOND_TO_LIGHT
-            #pragma shader_feature_local _ENABLE_FLARE
             
             #include "UnityCG.cginc"
             #include "Packages/com.llealloo.audiolink/Runtime/Shaders/AudioLink.cginc"
@@ -133,19 +123,8 @@ Shader "Custom/RainbowHeartburstIris" {
             uniform float _SunburstRotationSpeed;
             uniform float _SunburstIntensity;
             
-            // Lens flare properties
-            uniform float _FlareIntensityThreshold;
-            uniform float4 _FlareColor;
-            uniform float _FlareSize;
-            uniform float _FlareRays;
-            uniform float _FlareBloom;
-            
             // Environment properties
             uniform float _EnvironmentLightingAmount;
-            
-            // Coordination properties
-            uniform float _EyeID;
-            uniform float4 _EyeCenter;
             
             // AudioLink texture
             uniform sampler2D _AudioLink;
@@ -245,9 +224,6 @@ Shader "Custom/RainbowHeartburstIris" {
             }
             
             fixed4 frag (v2f i) : SV_Target {
-                // Store eye center in world space for the lens flare shader to use
-                _EyeCenter = float4(i.worldPos.xyz, 1.0);
-                
                 // ============= AudioLink Integration =============
                 float audioLinkAvailable = AudioLinkIsAvailable();
                 float bass = 0;
@@ -480,192 +456,6 @@ Shader "Custom/RainbowHeartburstIris" {
                 finalColor.a = 1.0;
                 
                 return finalColor;
-            }
-            ENDCG
-        }
-        
-        // Screen-space lens flare pass using GrabPass
-        Pass {
-            Blend One One // Additive blending for glow effects
-            ZWrite Off
-            Cull Back
-            
-            CGPROGRAM
-            #pragma vertex vert
-            #pragma fragment frag
-            #pragma shader_feature_local _ENABLE_FLARE
-            
-            #include "UnityCG.cginc"
-            
-            // Properties
-            uniform float _HeartPulseIntensity;
-            uniform float _HeartPupilSize;
-            uniform float _HeartPositionX;
-            uniform float _HeartPositionY;
-            uniform float _FlareIntensityThreshold;
-            uniform float4 _HeartPupilColor;
-            uniform sampler2D _HeartTexture;
-            uniform sampler2D _RainbowGradientTex;
-            uniform sampler2D _AudioLink;
-            
-            // Grab pass texture from previous pass
-            uniform sampler2D _GrabTexture;
-            
-            // Screen space flare properties
-            uniform float4 _FlareColor;
-            uniform float _FlareSize;
-            uniform float _FlareRays;
-            uniform float _FlareBloom;
-            
-            // Coordination properties for external flare shader
-            uniform float _EyeID;
-            
-            struct appdata {
-                float4 vertex : POSITION;
-                float2 uv : TEXCOORD0;
-                float3 normal : NORMAL;
-            };
-            
-            struct v2f {
-                float4 pos : SV_POSITION;
-                float2 uv : TEXCOORD0;
-                float4 grabPos : TEXCOORD1;
-                float3 worldPos : TEXCOORD2;
-                float4 screenPos : TEXCOORD3;
-            };
-            
-            // Get heart mask from texture
-            float getHeartMask(float2 uv, float size) {
-                // Adjust for position offset
-                float2 heartUV = uv - float2(_HeartPositionX, _HeartPositionY);
-                
-                // Scale the UVs for sizing (we need to work in 0-1 UV space)
-                float2 scaledUV = (heartUV - 0.5) / size + 0.5;
-                
-                // Sample the heart texture's alpha channel as the mask
-                float heartMask = 0;
-                
-                // Only sample if UVs are within 0-1 range
-                if (scaledUV.x >= 0 && scaledUV.x <= 1 && scaledUV.y >= 0 && scaledUV.y <= 1) {
-                    heartMask = tex2D(_HeartTexture, scaledUV).a;
-                }
-                
-                return heartMask;
-            }
-            
-            v2f vert (appdata v) {
-                v2f o;
-                o.pos = UnityObjectToClipPos(v.vertex);
-                o.uv = v.uv;
-                
-                // Calculate grab screen position for screen-space effects
-                o.grabPos = ComputeGrabScreenPos(o.pos);
-                
-                // Get world position for calculating flare direction
-                o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
-                
-                // Get screen position for coordinating with external flare shader
-                o.screenPos = ComputeScreenPos(o.pos);
-                
-                return o;
-            }
-            
-            // Create lens flare effect
-            float4 createLensFlare(float2 uv, float2 center, float intensity, float4 baseColor) {
-                // Distance from center
-                float2 delta = uv - center;
-                float dist = length(delta);
-                
-                // Normalize direction for ray calculation
-                float2 dir = normalize(delta);
-                
-                // Basic bloom around eye center
-                float bloom = exp(-dist * 10.0 / _FlareSize) * _FlareBloom * intensity;
-                
-                // Create rays emanating from center
-                float rays = 0;
-                if (dist > 0.1) { // Only show rays a bit away from center
-                    float angle = atan2(dir.y, dir.x);
-                    rays = pow(0.5 + 0.5 * sin(angle * _FlareRays), 5.0) * 
-                          exp(-dist * 5.0 / _FlareSize) * intensity;
-                }
-                
-                // Create halo rings
-                float halo = 0;
-                // Inner halo ring
-                float innerRing = abs(dist * 5.0 - 1.0) * 5.0;
-                halo += exp(-innerRing * innerRing) * 0.5;
-                // Outer halo ring (fainter)
-                float outerRing = abs(dist * 2.0 - 1.0) * 10.0;
-                halo += exp(-outerRing * outerRing) * 0.3;
-                
-                // Adjust halo by intensity
-                halo *= intensity * 0.5;
-                
-                // Sample rainbow gradient for color variation based on angle
-                float hueOffset = atan2(dir.y, dir.x) / (2.0 * 3.14159);
-                float4 rainbowColor = tex2D(_RainbowGradientTex, float2(frac(hueOffset + _Time.y * 0.1), 0.5));
-                
-                // Combine effects with color
-                float4 flareColor = baseColor * bloom + 
-                                   baseColor * rays * 0.5 + 
-                                   rainbowColor * halo;
-                
-                return flareColor;
-            }
-            
-            fixed4 frag (v2f i) : SV_Target {
-                // Skip rendering if flares are disabled
-                #if !_ENABLE_FLARE
-                return fixed4(0,0,0,0);
-                #endif
-                
-                // Basic animation for pulse effect
-                float bass = 0.5 + sin(_Time.y) * 0.1; 
-                
-                // Calculate heart size including base size and pulse effect
-                float heartSize = _HeartPupilSize * (1.0 + _HeartPulseIntensity * bass * 0.2);
-                
-                // Get heart mask from texture 
-                float heartMask = getHeartMask(i.uv, heartSize);
-                
-                // Generate screen-space position for flare
-                float2 grabUV = i.grabPos.xy / i.grabPos.w;
-                
-                // Calculate the center point of the eye in screen space
-                // This is approximately the center of the UV coordinates (0.5, 0.5) projected to screen space
-                float2 eyeCenter = i.grabPos.xy / i.grabPos.w;
-                // Adjust for the relative position within the eye mesh
-                eyeCenter += (0.5 - i.uv) * 0.01; // Small adjustment to center on iris
-                
-                // Audio-reactive intensity
-                float flareIntensity = bass;
-                
-                // Flare brightness boost based on threshold
-                float audioBoost = saturate((flareIntensity - _FlareIntensityThreshold) / (1.0 - _FlareIntensityThreshold));
-                flareIntensity = 0.2 + audioBoost * 0.8; // Base intensity plus audio boost
-                
-                // Create screen space lens flare
-                float4 flare = createLensFlare(grabUV, eyeCenter, flareIntensity, _FlareColor);
-                
-                // Heart glow (inverse of heart mask)
-                float heartGlow = (1.0 - heartMask) * 0.8 * audioBoost;
-                
-                // Apply flare only outside the iris area
-                float irisRadius = 0.5;
-                float insideIris = saturate(1.0 - length(i.uv - 0.5) / irisRadius);
-                // Gradually fade flare at iris boundary
-                float flareMask = 1.0 - smoothstep(0.8, 1.0, insideIris);
-                
-                // Combine heart glow with flare
-                float3 finalColor = flare.rgb * flareMask + 
-                                   heartGlow * _HeartPupilColor.rgb * (1.0 - flareMask);
-                
-                // Store information for external flare shader to use
-                // The external shader will use _EyeID to know which eye coordinates to use
-                
-                // No alpha in additive blend mode
-                return fixed4(finalColor, 0);
             }
             ENDCG
         }
