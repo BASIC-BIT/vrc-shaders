@@ -7,6 +7,7 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
 {
     // Keep track of foldout states
     private bool showAnimationControls = true;
+    private bool showParallaxControls = true;
     
     // Material properties
     private MaterialProperty _EnableHeart;
@@ -17,6 +18,7 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
     private MaterialProperty _RespondToLight;
     private MaterialProperty _HeartPulseIntensity;
     private MaterialProperty _RingRotationSpeed;
+    private MaterialProperty _GlobalParallaxStrength;
 
     public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] properties)
     {
@@ -30,6 +32,11 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
         
         // Draw animation controls
         DrawAnimationControls(materialEditor, material);
+        
+        EditorGUILayout.Space();
+        
+        // Draw Parallax Controls
+        DrawParallaxControls(materialEditor, material, properties);
         
         EditorGUILayout.Space();
         
@@ -73,6 +80,7 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
         _RespondToLight = FindProperty("_RespondToLight", properties);
         _HeartPulseIntensity = FindProperty("_HeartPulseIntensity", properties);
         _RingRotationSpeed = FindProperty("_RingRotationSpeed", properties);
+        _GlobalParallaxStrength = FindProperty("_GlobalParallaxStrength", properties);
     }
 
     private void DrawAnimationControls(MaterialEditor materialEditor, Material material)
@@ -85,6 +93,27 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
             EditorGUI.indentLevel++;
             materialEditor.ShaderProperty(_HeartPulseIntensity, "Heart Pulse Intensity");
             materialEditor.ShaderProperty(_RingRotationSpeed, "Ring Rotation Speed");
+            EditorGUI.indentLevel--;
+        }
+        
+        EditorGUILayout.EndFoldoutHeaderGroup();
+    }
+
+    private void DrawParallaxControls(MaterialEditor materialEditor, Material material, MaterialProperty[] properties)
+    {
+        // Draw parallax controls header
+        showParallaxControls = EditorGUILayout.BeginFoldoutHeaderGroup(showParallaxControls, "Parallax Controls");
+        
+        if (showParallaxControls)
+        {
+            EditorGUI.indentLevel++;
+            
+            // Global parallax strength affects all effects
+            materialEditor.ShaderProperty(_GlobalParallaxStrength, "Global Strength");
+            
+            // Specific effect parallax strengths
+            materialEditor.ShaderProperty(FindProperty("_RainbowParallaxStrength", properties), "Rainbow Strength");
+            
             EditorGUI.indentLevel--;
         }
         
@@ -117,6 +146,13 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
             materialEditor.ShaderProperty(FindProperty("_HeartPositionY", properties), "Position Y");
             materialEditor.ShaderProperty(FindProperty("_HeartBlendMode", properties), "Blend Mode");
             materialEditor.ShaderProperty(FindProperty("_HeartGradientAmount", properties), "Gradient Amount");
+            
+            // Add new parallax controls
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Parallax Settings", EditorStyles.boldLabel);
+            materialEditor.ShaderProperty(FindProperty("_HeartParallaxStrength", properties), "Parallax Strength");
+            materialEditor.ShaderProperty(FindProperty("_HeartParallaxHeight", properties), "Parallax Height");
+            
             EditorGUI.indentLevel--;
         }
     }
@@ -222,6 +258,10 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
             materialEditor.ShaderProperty(FindProperty("_InfiniteDepthStrength", properties), "Depth Strength");
             materialEditor.ShaderProperty(FindProperty("_InfiniteBlurStrength", properties), "Blur Strength");
             materialEditor.ShaderProperty(FindProperty("_InfiniteLayerCount", properties), "Layer Count");
+            
+            // Add mirror-specific parallax control
+            materialEditor.ShaderProperty(FindProperty("_InfiniteParallaxStrength", properties), "Parallax Strength");
+            
             EditorGUI.indentLevel--;
         }
     }

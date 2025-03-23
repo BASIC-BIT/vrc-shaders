@@ -18,6 +18,8 @@ Shader "Custom/RainbowHeartburstIris" {
         _HeartPositionY ("Position Y", Range(-0.5, 0.5)) = 0
         _HeartBlendMode ("Blend Mode (0=Alpha, 1=Overlay)", Range(0, 1)) = 0
         _HeartGradientAmount ("Gradient Amount", Range(0, 1)) = 0.3
+        _HeartParallaxStrength ("Parallax Strength", Range(0, 1)) = 0.3
+        _HeartParallaxHeight ("Parallax Height", Range(0, 0.2)) = 0.05
         
         [Space(10)]
         [Header(Rainbow Iris)]
@@ -51,6 +53,7 @@ Shader "Custom/RainbowHeartburstIris" {
         _InfiniteDepthStrength ("Depth Strength", Range(0, 1)) = 0.7
         _InfiniteBlurStrength ("Blur Strength", Range(0, 1)) = 0.5
         _InfiniteLayerCount ("Layer Count", Range(1, 8)) = 5
+        _InfiniteParallaxStrength ("Parallax Strength", Range(0, 1)) = 0.3
         
         [Space(10)]
         [Header(Environment)]
@@ -60,6 +63,11 @@ Shader "Custom/RainbowHeartburstIris" {
         
         // AudioLink texture (automatically populated by AudioLink system)
         [HideInInspector] _AudioLink ("AudioLink Texture", 2D) = "black" {}
+        
+        [Space(10)]
+        [Header(Parallax Controls)]
+        _GlobalParallaxStrength ("Global Parallax Strength", Range(0, 1)) = 0.5
+        _RainbowParallaxStrength ("Rainbow Parallax Strength", Range(0, 1)) = 0.2
     }
     
     SubShader {
@@ -101,6 +109,8 @@ Shader "Custom/RainbowHeartburstIris" {
             uniform float _HeartPositionY;
             uniform float _HeartBlendMode;
             uniform float _HeartGradientAmount;
+            uniform float _HeartParallaxStrength;
+            uniform float _HeartParallaxHeight;
             
             // Rainbow iris properties
             uniform sampler2D _RainbowGradientTex;
@@ -117,6 +127,7 @@ Shader "Custom/RainbowHeartburstIris" {
             uniform float _InfiniteDepthStrength;
             uniform float _InfiniteBlurStrength;
             uniform float _InfiniteLayerCount;
+            uniform float _InfiniteParallaxStrength;
             
             // Sunburst properties
             uniform float _SunburstLayerCount;
@@ -125,6 +136,10 @@ Shader "Custom/RainbowHeartburstIris" {
             
             // Environment properties
             uniform float _EnvironmentLightingAmount;
+            
+            // Parallax controls
+            uniform float _GlobalParallaxStrength;
+            uniform float _RainbowParallaxStrength;
             
             // AudioLink texture
             uniform sampler2D _AudioLink;
@@ -151,10 +166,16 @@ Shader "Custom/RainbowHeartburstIris" {
                 return mul(rotMatrix, uv);
             }
             
-            // Get heart mask from texture
-            float getHeartMask(float2 uv, float size) {
-                // Adjust for position offset
-                float2 heartUV = uv - float2(_HeartPositionX, _HeartPositionY);
+            // Get heart mask from texture with parallax effect
+            float getHeartMask(float2 uv, float size, float3 viewDir) {
+                // Calculate parallax offset based on view direction and simulated height
+                float2 parallaxOffset = float2(0,0);
+                #if _ENABLE_HEART
+                    parallaxOffset = viewDir.xy * _HeartParallaxStrength * _GlobalParallaxStrength * _HeartParallaxHeight;
+                #endif
+                
+                // Adjust for position offset and apply parallax
+                float2 heartUV = uv - float2(_HeartPositionX, _HeartPositionY) + parallaxOffset;
                 
                 // Scale the UVs for sizing (we need to work in 0-1 UV space)
                 float2 scaledUV = (heartUV - 0.5) / size + 0.5;
@@ -254,7 +275,7 @@ Shader "Custom/RainbowHeartburstIris" {
                 float heartSize = _HeartPupilSize * (1.0 + _HeartPulseIntensity * bass * 0.2);
                 
                 // Get heart mask from texture
-                heartMask = getHeartMask(i.uv, heartSize);
+                heartMask = getHeartMask(i.uv, heartSize, i.viewDir);
                 #endif
                 
                 // ============= Dynamic Iris Noise =============
@@ -279,6 +300,14 @@ Shader "Custom/RainbowHeartburstIris" {
                 #if _ENABLE_RAINBOW
                 float2 centeredUV = i.uv - 0.5;
                 float dist = length(centeredUV);
+                
+                // Add slight parallax to rainbow rings
+                float2 parallaxRainbowOffset = i.viewDir.xy * _RainbowParallaxStrength * _GlobalParallaxStrength * 0.1;
+                float2 rainbowParallaxUV = centeredUV + parallaxRainbowOffset;
+                float distWithParallax = length(rainbowParallaxUV);
+                
+                // Blend between normal and parallax-affected distance
+                dist = lerp(dist, distWithParallax, _RainbowParallaxStrength);
                 
                 // Apply noise distortion to the distance calculation
                 #if _ENABLE_NOISE
@@ -324,16 +353,29 @@ Shader "Custom/RainbowHeartburstIris" {
                 // Get layer count based on parameter
                 int layerCount = max(1, min(8, (int)_InfiniteLayerCount));
                 
+                // Calculate base view-direction parallax amount
+                float baseParallaxAmount = _InfiniteParallaxStrength * _GlobalParallaxStrength;
+                
                 // Loop through multiple depth layers
                 for (int layerIdx = 0; layerIdx < layerCount; layerIdx++) {
-                    float depth = 1.0 - (layerIdx / (float)layerCount) * _InfiniteDepthStrength;
-                    float2 scaledUV = (i.uv - 0.5) * depth + 0.5;
+                    // Calculate depth scale and parallax strength for this layer
+                    float layerDepth = 1.0 - (layerIdx / (float)layerCount) * _InfiniteDepthStrength;
+                    
+                    // Increase parallax effect for deeper layers
+                    float layerParallaxStrength = baseParallaxAmount * (1.0 + layerIdx * 0.5);
+                    
+                    // Calculate parallax offset based on view direction and layer depth
+                    float2 parallaxOffset = i.viewDir.xy * layerParallaxStrength * (1.0 - layerDepth);
+                    
+                    // Apply the parallax offset to the UV
+                    float2 scaledUV = (i.uv - 0.5) * layerDepth + 0.5;
+                    scaledUV += parallaxOffset;
                     
                     // Heart mask for this layer
                     float layerHeartMask = 0;
                     #if _ENABLE_HEART
                     float heartSize = _HeartPupilSize * (1.0 + _HeartPulseIntensity * bass * 0.2);
-                    layerHeartMask = getHeartMask(scaledUV, heartSize);
+                    layerHeartMask = getHeartMask(scaledUV, heartSize, i.viewDir);
                     #endif
                     
                     // Calculate blur based on depth
@@ -378,8 +420,8 @@ Shader "Custom/RainbowHeartburstIris" {
                     // Different rotation speed for each layer
                     float layerRotation = _Time.y * _SunburstRotationSpeed * (j % 2 == 0 ? 1 : -1);
                     
-                    // Parallax offset based on view direction
-                    float parallaxAmount = 0.02 * (j+1) / sunburstCount;
+                    // Enhanced parallax offset based on view direction
+                    float parallaxAmount = 0.02 * (j+1) / sunburstCount * _GlobalParallaxStrength;
                     float2 parallaxOffset = i.viewDir.xy * parallaxAmount;
                     float2 sunburstUV = i.uv + parallaxOffset;
                     
