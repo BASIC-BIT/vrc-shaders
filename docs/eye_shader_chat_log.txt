@@ -1,0 +1,709 @@
+I'm trying to come up with a unique idea for an eye shader in VRChat.  It's using HLSL in unity, and I'm going to start developing it when I come up with a unique idea.  I want to make something that is unique and utilizes some unique interesting features of shaders.  I also of course, want them to be very pretty, and fit a "cute" aesthetic. Give me some additional questions to spur idea generation.
+ChatGPT said:
+Here are some questions to help inspire unique and creative ideas for your eye shader:
+
+Visual Aesthetics:
+Would you prefer eyes that subtly animate (e.g., twinkling, sparkling) or dramatically transform (e.g., pupil shape shifts, iris color cycles)?
+
+Should the eyes have a glass-like appearance with internal depth, or would you rather explore flat stylized anime-inspired effects?
+
+Would you like elements that glow softly, pulse with energy, or subtly change with player actions or expressions?
+
+Interaction & Reactivity:
+Should the shader respond dynamically to in-game lighting or environmental color? For example, reflecting surroundings subtly in the eyes.
+
+How about incorporating reactivity to player proximity—maybe eyes that glow brighter or change when another player is close?
+
+Could expressions or gestures trigger unique visual transformations (e.g., crying hearts, sparkling excitement, swirls for dizziness)?
+
+Unique Shader Features:
+Do you want to experiment with parallax or layered depth effects to create the illusion of depth and dimensionality within the eye?
+
+Would procedural patterns or noises like Perlin noise, Voronoi cells, or cellular automata intrigue you to create unique animated irises?
+
+How about incorporating distortion effects (like subtle refractions, bubbles, or wobbling liquid effects)?
+
+Thematic and Storytelling Elements:
+Could your shader visually hint at emotions or story elements? For instance, eyes that subtly reflect different moods (sparkles for happiness, waves for calmness).
+
+Would you want a theme or motif embedded within the eyes, such as tiny constellations, digital circuitry, flower petals, or animal-inspired patterns?
+
+Could seasonal, weather-related, or day/night-cycle effects add uniqueness (e.g., eyes shifting hues based on real-world time or season)?
+
+Technical Innovation:
+Interested in a shader that utilizes vertex displacement for expressive, cartoonish exaggeration of pupil dilation or contraction?
+
+Do you want to integrate screen-space effects, like reflections, chromatic aberration, or faux lens effects, to create hyper-realistic or stylized anime eyes?
+
+Would you consider experimenting with a holographic or glitch-like shader effect for a futuristic or whimsical style?
+
+These questions can guide your brainstorming toward shader effects that are both visually distinctive and technically impressive. Let me know which areas pique your interest!
+
+
+
+
+
+
+
+You said:
+My existing face is kinda a cross between an anime and realistic style, with big pretty blue eyes.  Since I'll be socializing with people, I don't want them to be TOO distracting.... but the idea of rainbow iris color circles, perhaps in a ring or rings, sounds REALLY cute!  It'd be nice to be able to modify them with parameters as well, perhaps having an "idle" mode and an "active mode" OH LET'S USE AUDIO LINK TOO! They should pulse with the audio.  I'd love some layered depth effects, like an infinite mirror effect, but I'd want it to be visually distinct from existing infinite mirror eye shaders. I really love hearts and cutsie shit.  I don't want to use any vertex displacement.  Screens-pace effects might be really interesting specifically to add some sort of lens flare/glow that extends outside the eye itself.
+ChatGPT said:
+Your concept sounds incredibly charming! Combining a soft, anime-realistic style with dynamic shader effects that aren't overly distracting is a great balance.
+
+Here's a refined and focused shader idea based on your interests:
+
+✨ Concept: "Heartbeat Rainbow Mirror Eyes" ✨
+This shader features cute, animated rainbow-colored concentric rings in the iris with a layered infinite mirror effect that pulses and reacts gently to audio (via AudioLink). The design incorporates heart shapes and a subtle screen-space glow/lens-flare extending softly outward from the eyes.
+
+🎨 Visual Description:
+Base Iris:
+
+A central, vibrant blue hue matching your existing eyes, smoothly transitioning outward into soft pastel rainbow rings (parameters adjustable).
+
+Rings gently rotate at subtly different speeds, adding to a dreamy, hypnotic yet non-intrusive aesthetic.
+
+Infinite Mirror Depth Effect (Unique Twist):
+
+Instead of standard circular mirrors, use softly shaped heart outlines receding into the iris, creating a sense of whimsical depth.
+
+The hearts become progressively smaller and fade out gently into infinity.
+
+The depth and spacing between layers should be adjustable for subtlety or a stronger effect.
+
+Idle and Active Modes:
+
+Idle Mode: Slow rotation, gentle breathing-like pulsing of brightness and saturation—very subtle and calming.
+
+Active Mode: Upon toggling or audio input via AudioLink, the hearts pulse in time with bass beats or rhythm, rings increase rotation speed slightly, and rainbow colors shift more dynamically.
+
+🔊 AudioLink Integration:
+Beat Sync: Hearts subtly scale or pulse with the music's bassline or beat intensity.
+
+High-Frequency Reaction: Brightness or sparkles within rings respond to higher-frequency audio input, creating sparkly highlights synced to music.
+
+🌟 Screen-space Glow/Lens Flare:
+A soft bloom or gentle lens flare radiating outward from the eye in a heart shape, appearing lightly during strong audio pulses or expressive animations.
+
+Customizable intensity and threshold parameters so you can control when and how intensely these effects trigger.
+
+🛠️ Shader Parameters (Customizable):
+Ring Colors & Count: Adjust how many rings and their individual colors.
+
+Infinite Mirror Intensity: Depth, fading, heart shape sharpness.
+
+Pulse Reactivity: Scale and intensity of reactions to AudioLink input.
+
+Lens Glow & Flare Strength: Control visual prominence to fit your social scenarios.
+
+❓ Additional Questions to Finalize Concept:
+Would you prefer the outer rings of the rainbow to fade subtly into transparency, blending naturally into the whites of your eyes, or have a clear boundary?
+
+Should the heart shapes in the infinite mirror effect be crisp or softened edges for a dreamy feel?
+
+Would you like the eyes to subtly reflect nearby players’ colors or avatars, or keep them self-contained?
+
+How does this refined idea resonate with you?
+
+
+
+
+
+
+
+You said:
+The 3D Model of my Iris is just a circle, the whites are actually a separate mesh behind the eyes.  So our shader will focus entirely on just the eye circle, and of course the screen space shader effect. So to your question, it'll be a clear boundary, but it could have a soft edge.  We have "limited real-estate", so I want as much space to be dramatic as possible.  It'd also be nice to have some "streaks" in semi-random orientations sunbursting out from the iris, perhaps parallaxes to be somewhere "in the middle" depth-wise of the mirror effect.  I also think we should just use the heart for the pupil (or in other words, omit the black pupil  circle entirely), as long as it doesn't look too unnatural.  I don't care about reflection of avatars, but it'd be nice if it had an animatable parameter for how much to be affected by world brightness and world light colors.  For the infinite mirror effect, it'd be neat to get the best of both worlds - start off somewhat sharp, then blur the background ones.  What other questions or ideas do you have?
+ChatGPT said:
+Fantastic refinements—your shader vision is coming together beautifully! With these clarifications, here's a refined and concise summary of the shader you’re envisioning:
+
+🌈 Final Shader Concept 🌈
+“Rainbow Heartburst Iris” Shader
+Mesh: Single circle iris mesh, clear soft boundary.
+
+Style: Anime-realistic hybrid; vibrant, dreamy, and dynamic, yet non-intrusive.
+
+Finalized Visual Features:
+Rainbow Ring Iris:
+
+Central heart-shaped pupil (black or very dark, customizable).
+
+Iris features animated pastel rainbow-colored rings around the heart pupil, rotating subtly at varied speeds.
+
+Depth & Infinite Mirror:
+
+Infinite heart-shaped layers starting crisp and progressively becoming softly blurred as they recede.
+
+Customizable layer spacing and blur amount.
+
+Sunburst Streaks (Parallax):
+
+Streaks radiating outward from the pupil toward iris edge.
+
+Semi-random orientations, depth positioned between infinite mirror layers.
+
+Slightly moving with a subtle parallax effect to enhance depth and realism.
+
+Audio Reactivity (AudioLink):
+
+Heart-shaped pupil subtly scales (beat-synced) in response to bass frequencies.
+
+Rainbow rings pulse brightness and sparkle with mid-to-high audio frequencies.
+
+Screen-space Glow & Lens Flare:
+
+Gentle, cute heart-shaped bloom and soft streaked lens flare radiating outward subtly when responding strongly to audio or emotion triggers.
+
+Customizable flare intensity threshold.
+
+Environmental Lighting:
+
+Iris colors optionally influenced by world brightness and color, controlled by animatable shader parameter.
+
+Shader Customization & Animation Parameters:
+Heart Pupil:
+
+Scale (base size, audio reactivity strength)
+
+Rainbow Rings:
+
+Color, count, rotation speed, brightness pulsing strength
+
+Infinite Mirror:
+
+Depth strength, blur gradient (sharp → blurred), spacing, fade distance
+
+Sunburst Streaks:
+
+Number of streaks, length, parallax intensity, rotation randomness
+
+Lens Flare & Bloom:
+
+Threshold, brightness, flare size, color tint
+
+Environmental Reaction:
+
+Influence from environmental brightness and colors (0–100%)
+
+Additional Refining Questions to Consider:
+Would you want the heart pupil to change color subtly (perhaps pulsing darker or lighter shades) based on audio or expressions?
+
+Should the sunburst streaks animate or gently shift orientations over time for added dynamism, or remain static?
+
+How much movement/parallax effect is ideal to stay noticeable yet not distracting?
+
+Could you envision different shader "presets" or modes easily switchable via VRChat's radial menu for quick adjustments on the fly?
+
+Extra Creative Ideas for Inspiration:
+Emotion-based Effects:
+Optional parameter or toggle to subtly indicate emotional state through shader (e.g., calmer pulse for relaxed mood, excited sparkle for joy).
+
+Blink Interaction:
+When blinking, briefly emphasize bloom intensity for a cute, expressive "sparkle blink."
+
+“Magic Lens” Effect:
+Optional subtle distortion or chromatic aberration around iris edges when strongly pulsing with music.
+
+Let me know your thoughts, and if there's anything else you'd like to add or explore further!
+
+You said:
+Yes it'd be cool to have the heart pupil pulse subtly.  It also doesn't have to be *too* dark in the center.  Yes let's have the sunburst streaks shift over time, perhaps in multiple counter-rotating layers.  it'd be *really* neat if the sunbursts also had a screen-space subtle lens-flare effect outside of the eyes
+ChatGPT said:
+I love where this is headed! Your shader is shaping up into a truly charming, unique, and expressive visual. Here's a cohesive, updated summary integrating these new ideas clearly and succinctly:
+
+💖 "Rainbow Heartburst Iris" Shader 💖
+Finalized Shader Description:
+General Look:
+
+Anime-realistic aesthetic with vibrant, pastel-rainbow colors.
+
+Dynamic and expressive, yet subtle enough for comfortable social interaction.
+
+✨ Detailed Features:
+1. Heart-shaped Pupil (Animated):
+
+Central heart shape gently pulses, reacting subtly to audio via AudioLink.
+
+Customizable heart color: darker pastel, semi-dark, or softly glowing hue rather than strictly black for softer feel.
+
+2. Infinite Mirror Depth Effect (Heart Layers):
+
+Crisp heart-shaped layers near front gradually blurring into dreamy softness further back.
+
+Customizable blur gradient, spacing between layers, and depth strength.
+
+3. Rainbow Rings (Concentric Animated Iris Rings):
+
+Pastel rainbow-colored rings gently rotating at different speeds.
+
+Brightness gently pulses and sparkles subtly synchronized with mid-to-high audio frequencies.
+
+4. Sunburst Streaks (Animated, Parallax):
+
+Multiple overlapping layers of streaks radiating outward from pupil.
+
+Layers rotate slowly in opposite directions, adding visual depth.
+
+Parallax effect subtly visible as avatar viewpoint shifts, enhancing depth illusion.
+
+5. Screen-Space Glow & Lens Flare:
+
+Heart-shaped bloom and soft, pastel-colored flare gently radiating outward beyond eye boundaries, intensifying slightly on audio pulses.
+
+Sunburst streaks subtly extend beyond eye as lens-flare streaks in screen space, enhancing magical/cute effect.
+
+6. Environment Reactive Lighting:
+
+Optional animatable parameter allowing iris color brightness and hue to softly adapt to world brightness and ambient lighting colors.
+
+⚙️ Customizable Shader Parameters:
+Heart Pupil:
+
+Pulse intensity & frequency
+
+Color hue/saturation/brightness
+
+Infinite Mirror:
+
+Number of layers, blur strength, fade distance
+
+Rainbow Rings:
+
+Rotation speeds, ring count, color palette, sparkle intensity
+
+Sunburst Streaks:
+
+Number of streak layers, rotation speed/direction, parallax strength
+
+Lens Flare & Glow:
+
+Flare intensity threshold, bloom radius, color tint, streak length outside eye boundary
+
+Environmental Reaction:
+
+Slider (0-100%) controlling responsiveness to world lighting/color
+
+🌟 Additional Implementation Questions & Ideas:
+Would you prefer direct manual control over each color/ring or convenient presets (e.g., “pastel,” “warm,” “cool,” “party mode”)?
+
+Should the audio-reactive pulsing animation strength be user-adjustable separately for bass and high-frequency inputs?
+
+Would you like a subtle “idle animation” (slow breathing animation for pupil/rings) to provide gentle visual interest when AudioLink isn't active?
+
+Could blinking enhance the shader, briefly intensifying lens flares and sparkles as the eye reopens?
+
+This feels like a cohesive, exciting, and visually delightful concept! Do these additional thoughts resonate with you? Any final tweaks before diving into development?
+
+
+
+
+
+
+
+You said:
+Perform some research on the HLSL and VRChat-specific shaders including how audiolink parameters work, and anything else we'll need to implement this.  Pre-emptively think of any issues we might have in implementation and tips and tricks we'll need to be successful.  This will be an AI agent coding the shader, so we need as much information as possible to guarantee success.
+ChatGPT said:
+To help you effectively, could you please confirm the following:
+
+Are you targeting VRChat's standard rendering system (Unity built-in renderer), or are you using a specific rendering pipeline like URP?
+
+Which shader development environment are you using—ShaderLab with HLSL, Amplify Shader Editor, or something else?
+
+Are you aiming to make this shader toggleable or configurable via parameters in VRChat's Expression Parameters and Menus?
+
+With this info, I can ensure the research covers exactly what you’ll need.
+
+
+
+
+
+
+
+You said:
+Yes I'm targetting VRChats standard rendering system with HLSL. And yes I want to be able to control various aspects with VRChat Parameters.
+ChatGPT said:
+Great! I’ll gather detailed information on implementing HLSL shaders for VRChat, including integration with AudioLink and Expression Parameters for control. I’ll also look into common pitfalls, best practices, and helpful tips to ensure your shader can be developed successfully.
+
+I’ll let you know as soon as I have everything ready!
+
+Research completed in 5m · 37 sources
+Developing Custom HLSL Shaders for VRChat (2025 Edition)
+Custom HLSL shaders in VRChat (using Unity’s built-in render pipeline) can unlock unique visual effects for avatars and worlds. This guide covers audio-reactive AudioLink integration, exposing shader controls through VRChat’s expression menus, common pitfalls with custom eye shaders, and tips/tools for efficient development. All information is up-to-date with the current VRChat SDK3 and AudioLink versions as of 2025.
+1. Using AudioLink in VRChat Shaders
+AudioLink is a community-made system that provides real-time audio spectrum data to shaders in VRChat. It works by analyzing the world’s audio and buffering frequency data into a GPU texture that all shaders can access​
+GITHUB.COM
+. Specifically, AudioLink creates a global 128×64 RGBA Audio Texture (commonly referred to by the shader property _AudioTexture or _AudioLink) containing various audio data streams​
+GITHUB.COM
+. Key audio parameters available include four frequency bands (bass, low-mid, high-mid, treble) updated each frame. These four values are packed into a 1×4 pixel region of the audio texture​
+GITHUB.COM
+ – effectively giving you real-time amplitude of different parts of the music. Many more data streams exist (waveform, spectrogram slices, VU meter levels, etc.), but the 4-band data is the most commonly used for avatar effects. AudioLink’s GPU analysis runs every frame, so these values respond near-instantly to music and other audio in the world​
+GITHUB.COM
+. Hooking into AudioLink (HLSL): To use AudioLink data in your custom shader, you should declare a sampler for the audio texture and include AudioLink’s helper definitions. The official AudioLink package provides a cginc include file for shader integration. In your shader code (inside the CGPROGRAM block), add the AudioLink texture property and include the AudioLink cginc, for example:
+c
+Copy
+Edit
+Properties {
+    _AudioLink ("AudioLink Texture", 2D) = "black" {}
+}
+...
+CGPROGRAM
+    #include "UnityCG.cginc"
+    #include "Packages/com.llealloo.audiolink/Runtime/Shaders/AudioLink.cginc"
+    // your HLSL code...
+ENDCG
+This ensures your shader has access to the global audio data texture​
+GITHUB.COM
+​
+GITHUB.COM
+. The AudioLink cginc defines convenient macros and functions to sample the texture. For instance, ALPASS_AUDIOLINK is defined as the coordinate of the 4-band data​
+GITHUB.COM
+, and functions like AudioLinkData() or AudioLinkLerp() can sample the texture. In practice, you might fetch the bass/treble values by sampling the _AudioLink texture at the appropriate UV. (If not using the cginc, you’d manually sample _AudioTexture at the pixel offsets defined by AudioLink’s documentation.) Best Practices for Audio-Reactive Effects: It’s tempting to drive intense effects directly from raw audio data, but some care is needed for pleasing results. AudioLink provides smoothed data streams to prevent jitter – for example, ALPASS_FILTEREDAUDIOLINK gives a heavily smoothed version of the 4-band audio, useful to avoid rapid strobing​
+GITHUB.COM
+. Using these filtered values or applying your own smoothing (e.g., lerping over time) can make visual reactions more comfortable on the eyes. Another tip is to allow some form of sensitivity or gain control. AudioLink automatically normalizes audio amplitude to some extent (it even has an auto-gain feature to adjust for volume changes​
+GITHUB.COM
+), but providing a multiplier slider in your shader or avatar menu lets users tweak how reactive the effect is to loud/quiet music. Also, consider focusing your effect on particular bands that suit it – for instance, a pulsing glow might respond best to bass beats, whereas a shimmer could tie to treble (high frequencies)​
+VRCARENA.COM
+. If needed, combine bands (e.g. use the max or average of all bands) for a generalized response. Always test your audio-reactive shader with different audio content. Try bass-heavy songs, vocal-centric music, etc., to ensure your shader reacts as intended across scenarios. AudioLink supplies data for a broad spectrum (from low bass to high treble), so you can design effects that trigger on specific cues (like a bass drop) or overall music intensity. Keep in mind that on Quest (Android VRChat) AudioLink is limited – the GPU readback of audio data is expensive there, so AudioLink is typically recommended only for PC avatars​
+GITHUB.COM
+. For cross-platform avatars, ensure your shader falls back gracefully if AudioLink data isn’t available (you can detect this via float AudioLinkGetVersion() which returns 0 if AudioLink isn’t running​
+GITHUB.COM
+).
+2. Exposing Shader Parameters via VRChat Expression Parameters
+VRChat Avatars 3.0 allows you to control material properties through Expression Parameters and Expression Menus. The workflow involves creating custom parameters that sync with your avatar’s Animator controller. In essence, you drive shader properties by animating them in Unity, then use VRChat’s menu to trigger those animations. Creating Expression Parameters: In Unity, create a VRC Expression Parameters asset and add entries for each shader variable you want to control (e.g., a float for “GlowIntensity” or a bool for “EnableEffect”). Each parameter has a name, type (Bool, Int, or Float), default value, and sync setting. Add this Parameter asset to your avatar’s descriptor. Every parameter you define here will be network-synced (if marked synced) and propagated into the avatar’s animator layers​
+VRC.SCHOOL
+. Linking to the Animator and Shader: For each expression parameter, create a matching parameter in your avatar’s Animator (usually the FX layer controller). The name must match exactly – if you have an Expression Parameter called "GlowIntensity" and a float parameter of the same name in the FX animator, changing the expression value will automatically update the animator parameter​
+VRC.SCHOOL
+. This is how VRChat bridges the menu slider to your shader. Next, create one or more animation clips that adjust the material property. For example, to control a shader’s _GlowStrength float, you might create two animations: one where _GlowStrength = 0 and another where _GlowStrength = 1. Add these animations into your FX animator on a new layer. You can use a Blend Tree or transitions driven by the parameter to blend between states. For a continuous slider (float parameter), a 1D Blend Tree is convenient: set the parameter as the blending value, and include the two animations at param=0 and param=1. Unity will interpolate the material property between those values as the parameter changes. For a simple toggle, you can use a bool parameter to switch between two states: one state with the effect off (material property at default) and one with it on. Ensure the animator transitions are set up so that when the parameter changes, the material property animates accordingly. Controlling via VRChat Menu: Finally, create a VRC Expressions Menu asset. Add a Control on the menu for your parameter. For a toggle, use a Toggle control tied to the bool parameter. For a slider, use a Puppet (Analog) control or a radial slider tied to the float parameter. When in VRChat, you can open your expressions menu and move the slider or toggle the button, and this will change the expression parameter’s value, which in turn drives the animator and alters the shader property. Keep in mind that VRChat expression floats are limited to -1.0 to 1.0 range with about 255 steps of precision when synced​
+CREATORS.VRCHAT.COM
+. In practice, this means if you need a larger range, you should scale it in the shader. For example, a slider might give 0.0 to 1.0, and your HLSL code multiplies that to, say, 0–10 for an intensity. If you need more precision or range, you can use an Int parameter (0–255) and convert in shader (e.g., 0–255 int mapped to 0–2π for a hue rotation). However, for most use cases like toggles or normalized effects, a float 0–1 is sufficient. Best Practices: Use descriptive parameter names and consider the networking cost. Each synced parameter uses some “memory” budget (1 byte for bool, 1 byte for int, 1 byte for float since it’s 8-bit fixed precision)​
+CREATORS.VRCHAT.COM
+. VRChat allows up to 256 bytes total for synced params, so don’t go overboard. If a parameter doesn’t need to be network-synced (e.g., purely cosmetic local tweak), mark it as local. Also, test your animations thoroughly – ensure there are no unintended interactions with other animation states. It’s often wise to put all shader-property animations on the FX layer (which is meant for purely cosmetic/avatar logic) to avoid conflicts with body animations. Lastly, avoid using Write Defaults unless you know what you’re doing; mismatched Write Defaults can reset material values unexpectedly when switching states. Using a “buffer” or idle state as described in VRChat avatar animation guidelines can help prevent a one-frame flicker when a toggle is activated​
+VRC.SCHOOL
+​
+VRC.SCHOOL
+.
+3. Common Issues & Limitations with Custom Eye Shaders
+Designing custom eye shaders can be tricky due to transparency and rendering order. Here are some common challenges and how to handle them:
+Transparency Sorting: Many fancy eye effects involve multiple layers (e.g., an iris, a refractive cornea, a glowing overlay). In Unity, transparent objects are drawn back-to-front and do not write to the depth buffer, which can cause sorting glitches. If two transparent surfaces are very close or intersecting, Unity may render them in the wrong order, making one appear in front of the other incorrectly or causing one to “cut out” portions of the other​
+GITHUB.COM
+. For example, an avatar’s eye might have a transparent “shine” mesh on top of a transparent iris; if they share the same material or sorting order, the shine might occlude the iris oddly from certain angles​
+GITHUB.COM
+. To fix this, assign distinct render queues or materials to each layer. You can set the outer cornea/shine material to a slightly later render queue (e.g., Transparent+1) so it always draws after the iris. Another trick is to use Alpha Test (Cutout) for one layer instead of semi-transparent blending – cutout materials write to depth and avoid sorting issues at the cost of hard edges. Many creators use alpha test for eyelashes or even the iris outline to prevent eyes rendering through eyelids or hair. In general, minimize layered transparency if possible; if needed, separate the meshes and adjust their RenderQueue ordering via the shader (Unity’s “Queue” tag or material render queue override) to enforce correct draw order.
+Render Queue & See-Through Avatars: Be careful not to set your eye shader’s render queue too high. Some custom shaders accidentally use Overlay (queue 4000) or similar. In VRChat, if your material is on Overlay queue (or otherwise rendering after world geometry), your avatar can appear on top of everything – you’ll literally be visible through walls and other objects, which is usually undesired​
+REDDIT.COM
+. For eyes, you typically want them in the Transparent range (around 3000) if they’re transparent, or in Geometry (2000) if fully opaque. Setting an eye material to Overlay will make it draw last, ignoring depth, causing the creepy wall-peek effect. One user discovered their avatar’s toggleable eye effect was set to queue 4000, making them visible through walls; lowering the render queue fixed it​
+REDDIT.COM
+. The rule of thumb is: never use Overlay queue on avatars unless you have a specific reason to draw over everything (and accept the consequences). Stay within Opaque, AlphaTest, or Transparent queues and use depth testing appropriately so your avatar respects world geometry.
+Screen-Space and Stereo-Eye Considerations: Any screen-space or view-dependent effect in an eye shader must consider VR’s dual cameras (left and right eye). For example, if you attempt a fake “glint” that always faces the viewer by using the camera vector, remember that in VR there are two slightly different camera positions. A naive implementation might look fine in a desktop view but cause double-vision in VR (each eye sees the glint at a slightly different position on the iris). To handle this, ensure you use Unity’s stereo macros. Unity’s shader include (UnityCG.cginc) provides unity_StereoEyeIndex and other macros to differentiate rendering for each eye​
+GITHUB.COM
+​
+GITHUB.COM
+. In many cases, you might not need eye-specific branching, but you should test your shader in VR to be sure the effect looks correct with depth perception. Avoid tricks that fix an element to the screen (like using raw screen UVs for an overlay on the eye) – since avatars are not full-screen effects, anything drawn in “screen space” will only appear within the mesh and might not align between eyes. If you want a reflection or refraction, consider using environment mapping or Reflection Probes rather than GrabPass screen capture. GrabPass (capturing the framebuffer for refraction) is not only heavy on performance​
+REDDIT.COM
+, but it’s also known to have issues in VR single-pass rendering. If you do use it, test in VR thoroughly; otherwise, a static cubemap reflection may be a safer approach for eye shaders that simulate wet shine.
+Depth & Alpha in Eyes: If your eye shader uses depth-based tricks (like rendering to the depth buffer or testing depth), note that VRChat’s shader whitelist might disallow unusual depth writes on avatars. Generally, writing to depth (ZWrite) on transparent objects is off by default to prevent further sorting problems. However, in some cases (like a transparent lens you want to occlude other transparency behind it), you might enable ZWrite. This can fix sorting for that specific layered case but be cautious: a depth-writing transparent shader will prevent any other transparent objects behind it from rendering through, which might clip out other parts of your avatar (or even other avatars) erroneously. Use such techniques sparingly.
+Other limitations: VRChat’s safety system may fallback your shader if it’s extremely expensive or uses unsupported features. Custom HLSL shaders should avoid using disallowed functionality (like geometry/tessellation shaders or very high instruction counts) – otherwise VRChat might replace it with the “Standard Lite” shader for other users. Always check the Shader Blocking and Fallback guidelines if your eye shader is doing something exotic​
+CREATORS.VRCHAT.COM
+. In 2025, VRChat still uses the built-in pipeline for avatars, so things like Shader Graph aren’t directly supported – you’ll be writing shader code or using tools like Amplify Shader Editor to generate HLSL. Keep an eye on any VRChat updates in case future upgrades (e.g. support for URP or new shader features) come along, but as of now built-in pipeline Unity 2019/2021 style shader code is the standard.
+4. Tips, Tricks, and Tools for Efficient Shader Development
+Developing and testing VRChat shaders can be streamlined with a few tips:
+Use VRChat’s Creator Companion and VPM Packages: Ensure you’re using the VRChat Creator Companion (VCC) to manage your project. This will set up the correct Unity version and import the VRChat SDK and community packages (like AudioLink) easily​
+WIKI.VRCHAT.COM
+​
+WIKI.VRCHAT.COM
+. AudioLink, for example, can be added via VCC and kept up to date, so you always have the latest shader include and features. Using VPM (VRChat Package Manager) means you can #include the AudioLink cginc via the package path as shown above, and you won’t accidentally break it by modifying internal files.
+In-Editor Testing (ClientSim or Play Mode): Iterating by uploading to VRChat for every tweak is slow. Instead, test your shader in Unity Play Mode. For avatars, a popular approach is to use Lyuma’s Avatar Emulator or the new VRChat ClientSim. These tools simulate the VRChat avatar behavior in the editor, letting you test expression parameters, animations, and even AudioLink reactiveness without uploading. For example, Lyuma’s Av3 Emulator can drive your expression parameters and play avatar dynamics in real time​
+VRCARENA.COM
+. VRChat ClientSim (available via VCC Community Packages) similarly lets you hit Play and mimic a local client with your avatar loaded. This is extremely useful to debug things like whether your menu controls properly adjust the shader, or if your eye shader looks correct when you toggle pose (since you can simulate crouching, AFK, etc., which might affect your view of the eyes).
+AudioLink Debugging: When developing AudioLink reactive shaders, it’s helpful to test with actual audio. You can do this in-editor as well. The AudioLink package provides an AudioLink Avatar Prefab you can drop into your scene to simulate AudioLink data. By adding the prefab and then adding an Audio Source with music (e.g., an mp3) to the prefab’s input, you can press Play and see your shader respond to audio in Unity​
+VRCARENA.COM
+​
+VRCARENA.COM
+. This way, you can fine-tune thresholds and colors for audio-reactivity before uploading. VRChat also has official AudioLink test worlds​
+VRCARENA.COM
+​
+VRCARENA.COM
+ – those are great for checking your shader with various genres of music in VRChat once you have a build, but the in-editor test saves a lot of time.
+Logging and Debugging Shaders: Debugging HLSL can be challenging since you can’t print values easily. One trick is to output intermediate values to a color on the material (for example, map a value to the emissive color to “see” it). This can help tune things like “is my AudioLink bass value actually above 0.5 when I expect it?” by making it visibly change color. Additionally, Unity’s Frame Debugger (Window > Analysis > Frame Debugger) can be used while in Play Mode to step through draw calls. This can reveal if your render queues and sorting are behaving as expected (you can see the draw order of opaque and transparent meshes). It’s a good way to catch if, say, your eye cornea is drawing before the iris when it shouldn’t.
+Community Resources: The VRChat community is full of knowledge – check out the VRChat Ask Forums and community wikis for shader tips. Many shader creators share techniques on YouTube, GitHub, or Discords. For example, Poiyomi’s shader documentation includes notes on features like GrabPass and audio link modules (with warnings about performance)​
+REDDIT.COM
+. The open-source shadertrixx and shader knowledge bases on GitHub compile a lot of VRChat-specific shader wisdom (like detecting mirrors, VR vs desktop, eye index, etc.)​
+GITHUB.COM
+​
+GITHUB.COM
+ – these can be gold mines if you’re doing something advanced. Don’t hesitate to see how existing popular shaders (Poiyomi, Mochie, lilToon, etc.) implement features; many are open source or have snippets available.
+Performance Testing: Always consider the cost of your shader on a typical VRChat client. Use the Avatar Performance Stats in the SDK to see if your shader has a high instruction count or uses a lot of sampler slots. Tools like Unity’s Shader Graph are not used in VRChat avatars, but you can use Amplify Shader Editor which generates HLSL – still, ensure the generated code is efficient. Try to keep shader complexity reasonable (especially if you aim to stay “Very Poor” rank or better). For world shaders, the budget is bigger, but for avatars remember you might be in a room with 40 avatars all running shaders. Simple is often better for frame rates. Profile in Unity if possible (using the Profiler while running ClientSim, for example) to catch any spikes.
+In summary, implementing custom HLSL shaders in VRChat involves combining Unity shader know-how with VRChat’s systems. AudioLink opens up audio-reactive possibilities by supplying real-time music data to shaders​
+GITHUB.COM
+, expression parameters let users toggle and tweak shader effects during gameplay, and understanding Unity’s rendering order is crucial for things like layered eye shaders. By following current best practices – using the official SDK tools, testing in editor, and referencing community documentation – you can create impressive shader effects that play nicely with VRChat’s platform. Always keep one foot in the VRChat community channels for the latest tips, as the platform evolves and new features or constraints may arise (ensuring your shaders remain compatible and optimal). Happy shader coding! Sources:
+VRChat AudioLink GitHub – Documentation for shader creators​
+GITHUB.COM
+​
+GITHUB.COM
+​
+GITHUB.COM
+VRChat Community Wiki – AudioLink overview​
+GITHUB.COM
+​
+GITHUB.COM
+VRChat Ask Forum – Avatar parameters and animator syncing​
+VRC.SCHOOL
+VRChat Creation Docs – Expression Parameters and syncing rules​
+CREATORS.VRCHAT.COM
+lilToon Shader GitHub Issue – Example of eye layer transparency issue​
+GITHUB.COM
+Reddit (VRChat) – Discussion of avatar seen through walls due to render queue​
+REDDIT.COM
+VRCArena Tutorial – AudioLink setup for avatars (in-editor testing with prefab)​
+VRCARENA.COM
+​
+VRCARENA.COM
+
+
+
+
+
+You said:
+All right given all of the information we have thus far go ahead and search for any other information that might be necessary to complete this work
+ChatGPT said:
+Great! Building upon our previous discussions, here's some additional information to assist in developing your custom eye shader for VRChat:
+
+1. Shader Development Best Practices:
+
+Performance Considerations: Complex shaders can be performance-intensive. It's advisable to test your shader in various environments to ensure it doesn't negatively impact frame rates, especially in worlds with multiple avatars.​
+
+Compatibility: Ensure your shader is compatible with VRChat's rendering system and adheres to the platform's guidelines to avoid any potential issues.​
+
+2. AudioLink Integration:
+
+Shader Integration: AudioLink processes live audio data and converts it into multiple data streams, including frequency information like bass, mids, and treble. These streams can be utilized in shaders to create visuals that sync with the audio's beat and intensity. ​
+VRChat Wiki
+
+Testing: To test AudioLink functionalities within Unity, you can set up the AudioLink package in your project. Detailed instructions and a video tutorial are available to guide you through the setup process. ​
+Home | Poiyomi Shaders
+
+3. Additional Resources:
+
+Community Insights: Engaging with the VRChat community can provide valuable insights and practical tips. For instance, discussions on shader development and AudioLink integration can be found on platforms like Reddit. ​
+Reddit
+
+Tutorials: There are video tutorials available that walk through the process of creating AudioLink-compatible shaders using tools like Shader Forge. These can serve as a visual guide to complement your development process. ​
+YouTube
+
+By incorporating these best practices and resources, you'll be well-equipped to develop a unique and performance-optimized eye shader for VRChat.
+
+
+
+
+
+
+Sources
+
+2/2
+
+
+
+
+
+
+
+You said:
+Go ahead and sum up everything we've discussed so far in a verbose document that will be useful to hand to an AI for it to be able to perform the programming of the HLSL shader that we have discussed. Talk about all the features, all of the different HLSL language syntax that's going to be needed to use to make it happen. And anything else that will be useful to implement this shader. 
+ChatGPT said:
+Certainly! Here's a comprehensive, verbose, and structured document you can provide to an AI agent to guide the programming of the custom HLSL shader for VRChat, integrating all discussed features and implementation details.
+
+📄 Comprehensive Shader Development Document
+Project Overview
+You will be implementing a custom eye shader for VRChat avatars using Unity's built-in renderer and the HLSL shader language. The shader is intended for a single circular iris mesh and will feature vibrant, anime-realistic aesthetics, with dynamic effects responding to audio and user parameters.
+
+💡 Shader Features and Specifications
+1. Heart-shaped Pupil
+Shape and appearance:
+The pupil will be a soft-edged heart shape. Instead of traditional black, it should have customizable dark pastel colors or softly glowing hues.
+
+Animation and Reactivity:
+Subtle, rhythmic pulsing synchronized to audio input (AudioLink).
+
+Bass frequency input controls scale intensity and pulse strength.
+
+Implement smoothing/filtering to avoid visual jitter from sudden audio changes.
+
+2. Rainbow Iris Rings
+Appearance:
+Iris composed of concentric rings smoothly transitioning through pastel rainbow colors (e.g., blue → green → yellow → pink → violet).
+
+Animation:
+Rings rotate at varying gentle speeds.
+
+AudioLink Reactivity:
+
+Mid-to-high frequencies control sparkle intensity, brightness, and saturation.
+
+Subtle brightness and color shifting synchronized to the music, employing filtered AudioLink bands for smooth transitions.
+
+3. Infinite Mirror Depth Effect
+Appearance and Construction:
+Multiple heart-shaped layers receding into the eye.
+
+Depth Implementation:
+
+Near layers sharp and clearly defined.
+
+Background layers progressively blurred.
+
+Achieved by sampling the texture multiple times at progressively smaller scales, blending samples, and adjusting blur based on depth.
+
+4. Animated Parallax Sunburst Streaks
+Visual effect:
+Radiating streaks emanating outward from the pupil.
+
+Parallax Implementation:
+Multiple overlapping streak layers with subtle differences in rotation speeds and direction (counter-rotating). Parallax movement implemented by using slightly offset UVs based on view direction and depth offset in shader.
+
+Animation:
+Streak layers slowly rotate independently, producing dynamic and non-repetitive visual interest.
+
+5. Screen-space Lens Flare and Glow
+Visual effect:
+Soft, heart-shaped bloom and lens flare extending outward beyond the iris mesh.
+
+Technical implementation:
+Utilize a combination of additive blending, soft Gaussian blur (implemented as screen-space post-process), and directionally stretched emission to create subtle flares.
+
+AudioLink Reactivity:
+
+Flare intensity subtly responds to audio peaks, particularly bass beats.
+
+6. Environmental Lighting Reaction
+Visual Behavior:
+Colors and brightness of the iris subtly influenced by ambient world lighting.
+
+Shader Parameters:
+Adjustable float slider controlling the influence amount, enabling seamless integration into various world environments.
+
+⚙️ User-exposed Shader Parameters
+Parameters should be exposed through VRChat Expression Parameters and Animations for real-time in-game user control:
+
+Parameter	Type	Usage
+HeartPulseIntensity	float (0-1)	Controls scale and strength of pupil pulse
+RingRotationSpeed	float (0-1)	Controls speed of iris rings rotation
+IrisSparkleIntensity	float (0-1)	Sparkle strength tied to mid-high audio
+InfiniteDepthStrength	float (0-1)	Controls depth of infinite mirror layers
+InfiniteBlurStrength	float (0-1)	Amount of blur on rear layers
+SunburstLayerCount	int (1-5)	Number of parallax streak layers
+SunburstRotationSpeed	float (0-1)	Speed of streak rotation animation
+FlareIntensityThreshold	float (0-1)	Threshold for audio-reactive flare
+EnvironmentLightingAmount	float (0-1)	World lighting color influence on shader
+📖 HLSL Implementation Guidelines
+Essential Unity Shader Structure (ShaderLab with HLSL):
+h
+Copy
+Edit
+Shader "Custom/RainbowHeartburstIris" {
+    Properties {
+        _AudioLink ("AudioLink Texture", 2D) = "black" {}
+        _HeartPulseIntensity ("Heart Pulse Intensity", Range(0,1)) = 0.5
+        // Define additional properties...
+    }
+    SubShader {
+        Tags {"RenderType"="Transparent" "Queue"="Transparent+1"}
+        Blend SrcAlpha OneMinusSrcAlpha
+        ZWrite Off
+        Cull Back
+
+        Pass {
+            CGPROGRAM
+            #include "UnityCG.cginc"
+            #include "Packages/com.llealloo.audiolink/Runtime/Shaders/AudioLink.cginc"
+            
+            sampler2D _AudioLink;
+            float _HeartPulseIntensity;
+            // Additional uniforms and properties
+
+            struct appdata {
+                float4 vertex : POSITION;
+                float2 uv : TEXCOORD0;
+                float3 normal : NORMAL;
+            };
+
+            struct v2f {
+                float4 pos : SV_POSITION;
+                float2 uv : TEXCOORD0;
+                float3 viewDir : TEXCOORD1;
+                UNITY_FOG_COORDS(2)
+            };
+
+            v2f vert (appdata v) {
+                v2f o;
+                o.pos = UnityObjectToClipPos(v.vertex);
+                o.uv = v.uv;
+                o.viewDir = normalize(UnityWorldSpaceViewDir(v.vertex));
+                UNITY_TRANSFER_FOG(o,o.pos);
+                return o;
+            }
+
+            fixed4 frag (v2f i) : SV_Target {
+                // Sample AudioLink texture:
+                float4 audioData = tex2D(_AudioLink, float2(ALPASS_AUDIOLINK));
+
+                // Heart pulse based on bass audio:
+                float pulse = lerp(1.0, 1.0 + _HeartPulseIntensity * 0.2, audioData.r);
+
+                // Calculate iris rings and rainbow colors
+                // ...
+
+                // Parallax streak layers:
+                // UV offsets based on viewDir for subtle parallax:
+                // ...
+
+                // Infinite mirror depth layers with blur:
+                // Iterative sampling at reduced UV scales:
+                // ...
+
+                // Lens flare/glow effect:
+                // Emission calculation and additive screen-space blending:
+                // ...
+
+                fixed4 finalColor = // Combine all above components
+                UNITY_APPLY_FOG(i.fogCoord, finalColor);
+                return finalColor;
+            }
+            ENDCG
+        }
+    }
+}
+AudioLink HLSL Integration
+Access via included cginc:
+
+hlsl
+Copy
+Edit
+float4 audioLink = tex2D(_AudioLink, ALPASS_AUDIOLINK);
+float bass = audioLink.r;
+float mid = audioLink.g;
+float treble = audioLink.a;
+Depth Effects and Parallax
+Use view direction vectors and multiple UV offsets:
+
+hlsl
+Copy
+Edit
+float2 parallaxUV = i.uv + (i.viewDir.xy * depthAmount);
+Screen-space Lens Flare
+Employ additive blending (Blend One One) in a separate pass if required for flare effects beyond geometry edges.
+
+🚩 Common Pitfalls and Tips
+Transparency Sorting: Set shader queue to Transparent+1 or adjust for correct rendering order.
+
+VR Compatibility: Always test in VR for stereoscopic artifacts. Avoid fixed-screen-space effects without stereo-aware adjustments.
+
+Audio Jitter: Utilize AudioLink filtered audio bands or lerp smoothly over time.
+
+Performance: Regularly profile shader in Unity, ensuring low complexity and avoiding excessive loops.
+
+📚 References for Further Development
+VRChat AudioLink Documentation
+
+VRChat Shader Best Practices
+
+Unity HLSL Documentation
+
+This comprehensive document should empower an AI agent to confidently implement your custom shader, adhering to your creative vision and technical requirements.
