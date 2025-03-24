@@ -24,6 +24,12 @@ Shader "Custom/RainbowHeartburstIris" {
         _HeartHue ("Heart Hue Shift", Range(0, 1)) = 0
         _HeartSaturation ("Heart Saturation", Range(0, 2)) = 1
         _HeartBrightness ("Heart Brightness", Range(0, 2)) = 1
+        [Header(Heart Noise)]
+        [Toggle] _EnableHeartNoise ("Enable Heart Noise", Float) = 0
+        _HeartNoiseIntensity ("Noise Intensity", Range(0, 1)) = 0.2
+        _HeartNoiseScale ("Noise Scale", Range(0.1, 10)) = 2
+        _HeartNoiseSpeed ("Noise Speed", Range(0, 1)) = 0.2
+        [Toggle] _HeartDynamicNoise ("Dynamic Noise", Float) = 0
         [Header(Heart Size & Position)]
         _HeartPupilSize ("Heart Size", Range(0.1, 0.5)) = 0.2
         _HeartPositionX ("Position X", Range(-0.5, 0.5)) = 0
@@ -179,6 +185,11 @@ Shader "Custom/RainbowHeartburstIris" {
             uniform float _HeartHue;
             uniform float _HeartSaturation;
             uniform float _HeartBrightness;
+            uniform float _EnableHeartNoise;
+            uniform float _HeartNoiseIntensity;
+            uniform float _HeartNoiseScale;
+            uniform float _HeartNoiseSpeed;
+            uniform float _HeartDynamicNoise;
             
             // Rainbow iris properties
             uniform sampler2D _RainbowGradientTex;
@@ -308,6 +319,11 @@ Shader "Custom/RainbowHeartburstIris" {
                 return HSVtoRGB(hsv);
             }
             
+            // Forward declarations of functions used later
+            float noise(float2 uv);
+            float fractalNoise(float2 uv, int octaves);
+            float2 flowDistortion(float2 uv, float time);
+            
             // Modify the getHeartMask function to return both the mask and color
             float4 getHeartTexture(float2 uv, float size, float3 viewDir) {
                 // Calculate parallax offset based on view direction and simulated height
@@ -318,6 +334,26 @@ Shader "Custom/RainbowHeartburstIris" {
                 
                 // Adjust for position offset and apply parallax
                 float2 heartUV = uv - float2(_HeartPositionX, _HeartPositionY) + parallaxOffset;
+                
+                // Apply heart-specific noise distortion if enabled
+                if (_EnableHeartNoise > 0.5) {
+                    float2 noiseOffset = float2(0, 0);
+                    
+                    if (_HeartDynamicNoise > 0.5) {
+                        // Use flow distortion for organic movement (similar to iris noise)
+                        noiseOffset = flowDistortion(heartUV, _Time.y * 0.5) * _HeartNoiseSpeed * 0.5;
+                    } else {
+                        // Use simple panning for basic movement
+                        noiseOffset = float2(_Time.y, _Time.y * 0.7) * _HeartNoiseSpeed * 0.5;
+                    }
+                    
+                    // Generate noise specifically for heart distortion
+                    float2 heartNoiseUV = heartUV * _HeartNoiseScale + noiseOffset;
+                    float heartNoise = fractalNoise(heartNoiseUV, 2);
+                    
+                    // Apply the noise to distort the heart UV coordinates
+                    heartUV += (heartNoise - 0.5) * _HeartNoiseIntensity * 0.1;
+                }
                 
                 // Scale the UVs for sizing (we need to work in 0-1 UV space)
                 float2 scaledUV = (heartUV - 0.5) / size + 0.5;

@@ -314,6 +314,29 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
                 FindProperty("_HeartBrightness", properties)
             );
             
+            // Draw heart-specific noise controls
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("Heart Noise Effect", EditorStyles.boldLabel);
+            
+            // Toggle for enabling heart noise
+            MaterialProperty enableHeartNoise = FindProperty("_EnableHeartNoise", properties);
+            materialEditor.ShaderProperty(enableHeartNoise, "Enable Heart Noise");
+            
+            // Only show noise parameters if noise is enabled
+            if (enableHeartNoise.floatValue > 0.5f)
+            {
+                EditorGUI.indentLevel++;
+                materialEditor.ShaderProperty(FindProperty("_HeartNoiseIntensity", properties), "Noise Intensity");
+                materialEditor.ShaderProperty(FindProperty("_HeartNoiseScale", properties), "Noise Scale");
+                materialEditor.ShaderProperty(FindProperty("_HeartNoiseSpeed", properties), "Noise Speed");
+                materialEditor.ShaderProperty(FindProperty("_HeartDynamicNoise", properties), "Dynamic Flow");
+                EditorGUI.indentLevel--;
+            }
+            
+            EditorGUILayout.EndVertical();
+            
+            // Size & Position controls
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Size & Position", EditorStyles.boldLabel);
             materialEditor.ShaderProperty(FindProperty("_HeartPupilSize", properties), "Heart Size");
