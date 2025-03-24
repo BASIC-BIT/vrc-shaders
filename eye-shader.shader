@@ -30,13 +30,45 @@ Shader "Custom/RainbowHeartburstIris" {
         _IrisSparkleIntensity ("Sparkle Intensity", Range(0, 1)) = 0.5
         
         [Space(10)]
+        [Header(Iris Detail)]
+        [Toggle(_ENABLE_IRIS_DETAIL)] _EnableIrisDetail("Enable Iris Detail", Float) = 1
+        [Space(5)]
+        _IrisTexture ("Iris Texture", 2D) = "white" {}
+        _IrisTextureIntensity ("Texture Intensity", Range(0, 1)) = 0.5
+        _IrisTextureContrast ("Texture Contrast", Range(0, 2)) = 1
+        [Toggle] _IrisRadialPattern ("Radial Pattern Mode", Float) = 1
+        _IrisPatternRotation ("Pattern Rotation", Range(0, 6.28)) = 0
+        _IrisDetailParallax ("Detail Parallax", Range(0, 1)) = 0.2
+        
+        [Space(10)]
+        [Header(Limbal Ring)]
+        [Toggle(_ENABLE_LIMBAL_RING)] _EnableLimbalRing("Enable Limbal Ring", Float) = 1
+        [Space(5)]
+        _LimbalRingColor ("Ring Color", Color) = (0.05, 0.04, 0.03, 1)
+        _LimbalRingWidth ("Ring Width", Range(0.01, 0.2)) = 0.05
+        _LimbalRingSoftness ("Ring Softness", Range(0, 0.1)) = 0.02
+        
+        [Space(10)]
         [Header(Noise Effects)]
         [Toggle(_ENABLE_NOISE)] _EnableNoise("Enable Noise Effects", Float) = 1
         [Space(5)]
         _NoiseTexture ("Noise Texture", 2D) = "black" {}
         _IrisNoiseIntensity ("Noise Intensity", Range(0, 1)) = 0.3
         _IrisNoiseScale ("Noise Scale", Range(0.1, 10)) = 4
-        _IrisNoiseSpeed ("Noise Animation Speed", Range(0, 1)) = 0.2
+        _NoiseFlowSpeed ("Flow Speed", Range(0, 1)) = 0.2
+        [Toggle] _DynamicNoiseMovement ("Dynamic Flow Movement", Float) = 1
+        _NoiseDistortionScale ("Flow Distortion Scale", Range(0.1, 10)) = 2
+        _NoiseDistortionAmount ("Flow Distortion Amount", Range(0, 2)) = 0.5
+        
+        [Space(10)]
+        [Header(Sparkle Effects)]
+        [Toggle(_ENABLE_SPARKLE)] _EnableSparkle("Enable Sparkle Effects", Float) = 1
+        [Space(5)]
+        _SparkleColor ("Sparkle Color", Color) = (1, 1, 1, 1)
+        _SparkleScale ("Sparkle Scale", Range(1, 50)) = 20
+        _SparkleSpeed ("Sparkle Speed", Range(0, 5)) = 1
+        _SparkleAmount ("Sparkle Amount", Range(0, 1)) = 0.5
+        _SparkleSharpness ("Sparkle Sharpness", Range(1, 20)) = 5
         
         [Space(10)]
         [Header(Sunburst Streaks)]
@@ -93,6 +125,9 @@ Shader "Custom/RainbowHeartburstIris" {
             #pragma shader_feature_local _ENABLE_SUNBURST
             #pragma shader_feature_local _ENABLE_MIRROR
             #pragma shader_feature_local _RESPOND_TO_LIGHT
+            #pragma shader_feature_local _ENABLE_IRIS_DETAIL
+            #pragma shader_feature_local _ENABLE_LIMBAL_RING
+            #pragma shader_feature_local _ENABLE_SPARKLE
             
             #include "UnityCG.cginc"
             #include "Packages/com.llealloo.audiolink/Runtime/Shaders/AudioLink.cginc"
@@ -117,11 +152,34 @@ Shader "Custom/RainbowHeartburstIris" {
             uniform float _RingCount;
             uniform float _IrisSparkleIntensity;
             
+            // Iris detail properties
+            uniform sampler2D _IrisTexture;
+            uniform float _IrisTextureIntensity;
+            uniform float _IrisTextureContrast;
+            uniform float _IrisRadialPattern;
+            uniform float _IrisPatternRotation;
+            uniform float _IrisDetailParallax;
+            
+            // Limbal ring properties
+            uniform float4 _LimbalRingColor;
+            uniform float _LimbalRingWidth;
+            uniform float _LimbalRingSoftness;
+            
             // Noise properties
             uniform sampler2D _NoiseTexture;
             uniform float _IrisNoiseIntensity;
             uniform float _IrisNoiseScale;
-            uniform float _IrisNoiseSpeed;
+            uniform float _NoiseFlowSpeed;
+            uniform float _DynamicNoiseMovement;
+            uniform float _NoiseDistortionScale;
+            uniform float _NoiseDistortionAmount;
+            
+            // Sparkle properties
+            uniform float4 _SparkleColor;
+            uniform float _SparkleScale;
+            uniform float _SparkleSpeed;
+            uniform float _SparkleAmount;
+            uniform float _SparkleSharpness;
             
             // Infinite mirror properties
             uniform float _InfiniteDepthStrength;
@@ -210,7 +268,7 @@ Shader "Custom/RainbowHeartburstIris" {
                 return color;
             }
             
-            // Perlin-like noise function
+            // Perlin-like noise functions
             float noise(float2 uv) {
                 return tex2D(_NoiseTexture, uv).r;
             }
@@ -228,6 +286,35 @@ Shader "Custom/RainbowHeartburstIris" {
                 }
                 
                 return value;
+            }
+            
+            // Dynamic distortion using flow fields
+            float2 flowDistortion(float2 uv, float time) {
+                // Generate flow field vectors using noise
+                float2 flow;
+                flow.x = fractalNoise(uv * _NoiseDistortionScale + float2(0, time * 0.1), 2) * 2.0 - 1.0;
+                flow.y = fractalNoise(uv * _NoiseDistortionScale + float2(time * 0.15, 0), 2) * 2.0 - 1.0;
+                
+                // Normalize and scale
+                flow = normalize(flow) * _NoiseDistortionAmount;
+                
+                return flow;
+            }
+            
+            // Generate sparkles effect
+            float generateSparkles(float2 uv, float time) {
+                // Create several layers of noise at different scales for sparkle effect
+                float n1 = fractalNoise(uv * _SparkleScale + time * _SparkleSpeed, 3);
+                float n2 = fractalNoise(uv * (_SparkleScale * 0.5) - time * _SparkleSpeed * 0.7, 2);
+                
+                // Combine noise layers and sharpen
+                float sparkle = n1 * n2;
+                sparkle = pow(sparkle, _SparkleSharpness);
+                
+                // Threshold to control amount
+                sparkle = saturate((sparkle - (1.0 - _SparkleAmount)) / _SparkleAmount);
+                
+                return sparkle;
             }
             
             v2f vert (appdata v) {
@@ -267,6 +354,35 @@ Shader "Custom/RainbowHeartburstIris" {
                     treble = 0.5 + sin(_Time.y * 2.5) * 0.1;
                 }
                 
+                // ============= Dynamic Iris Noise with Flow Fields =============
+                float2 centeredUV = i.uv - 0.5;
+                float dist = length(centeredUV);
+                float2 noiseUV = i.uv;
+                float dynamicNoiseIntensity = 0;
+                float irisNoise = 0.5;
+                
+                #if _ENABLE_NOISE
+                // Create dynamic flowing noise using flow fields
+                float2 flowOffset = float2(0, 0);
+                
+                if (_DynamicNoiseMovement > 0.5) {
+                    // Use flow distortion for organic movement
+                    flowOffset = flowDistortion(i.uv, _Time.y) * _NoiseFlowSpeed;
+                } else {
+                    // Use simple panning for basic movement
+                    flowOffset = float2(_Time.y, _Time.y * 0.7) * _NoiseFlowSpeed;
+                }
+                
+                // Apply flow to noise coordinates
+                noiseUV = i.uv * _IrisNoiseScale + flowOffset;
+                
+                // Generate fractal noise
+                irisNoise = fractalNoise(noiseUV, 3);
+                
+                // Audio-reactive noise intensity
+                dynamicNoiseIntensity = _IrisNoiseIntensity * (1.0 + highMid * 0.3);
+                #endif
+                
                 // ============= Heart-shaped Pupil =============
                 float heartMask = 0;
                 
@@ -278,29 +394,10 @@ Shader "Custom/RainbowHeartburstIris" {
                 heartMask = getHeartMask(i.uv, heartSize, i.viewDir);
                 #endif
                 
-                // ============= Dynamic Iris Noise =============
-                float irisNoise = 0.5;
-                float dynamicNoiseIntensity = 0;
-                
-                #if _ENABLE_NOISE
-                // Create animated noise coordinates
-                float2 noiseUV = i.uv * _IrisNoiseScale;
-                noiseUV += _Time.y * _IrisNoiseSpeed;
-                
-                // Generate fractal noise
-                irisNoise = fractalNoise(noiseUV, 3);
-                
-                // Audio-reactive noise intensity
-                dynamicNoiseIntensity = _IrisNoiseIntensity * (1.0 + highMid * 0.3);
-                #endif
-                
                 // ============= Rainbow Iris Rings =============
                 float4 rainbowColor = float4(0,0,0,0);
                 
                 #if _ENABLE_RAINBOW
-                float2 centeredUV = i.uv - 0.5;
-                float dist = length(centeredUV);
-                
                 // Add slight parallax to rainbow rings
                 float2 parallaxRainbowOffset = i.viewDir.xy * _RainbowParallaxStrength * _GlobalParallaxStrength * 0.1;
                 float2 rainbowParallaxUV = centeredUV + parallaxRainbowOffset;
@@ -328,11 +425,6 @@ Shader "Custom/RainbowHeartburstIris" {
                 float2 rainbowUV = float2(ringIndex, 0.5);
                 rainbowColor = tex2D(_RainbowGradientTex, rainbowUV);
                 
-                // Audio-reactive sparkle
-                float sparkle = tex2D(_NoiseTexture, i.uv * 5.0 + _Time.y).r;
-                float sparkleIntensity = _IrisSparkleIntensity * highMid;
-                rainbowColor += sparkle * sparkleIntensity;
-                
                 // Apply iris noise to color
                 #if _ENABLE_NOISE
                 float3 noiseColor = tex2D(_RainbowGradientTex, float2(irisNoise, 0.5)).rgb;
@@ -341,6 +433,47 @@ Shader "Custom/RainbowHeartburstIris" {
                 #else
                 // Default color if rainbow is disabled
                 rainbowColor = float4(0.1, 0.1, 0.2, 1.0);
+                #endif
+                
+                // ============= Iris Detail Texture =============
+                #if _ENABLE_IRIS_DETAIL
+                // Create parallax offset for detail texture
+                float2 detailParallaxOffset = i.viewDir.xy * _IrisDetailParallax * _GlobalParallaxStrength;
+                float2 detailUV = i.uv + detailParallaxOffset;
+                
+                // For radial pattern, convert to polar coordinates and adjust
+                if (_IrisRadialPattern > 0.5) {
+                    float2 polarUV;
+                    polarUV.x = atan2(detailUV.y - 0.5, detailUV.x - 0.5) / (2.0 * 3.14159) + 0.5; // Angle
+                    polarUV.y = length(detailUV - 0.5) * 2.0; // Distance
+                    
+                    // Rotate the pattern
+                    polarUV.x = frac(polarUV.x + _IrisPatternRotation / (2.0 * 3.14159));
+                    
+                    detailUV = polarUV;
+                } else {
+                    // For non-radial, just rotate the UVs
+                    detailUV = RotateUV(detailUV - 0.5, _IrisPatternRotation) + 0.5;
+                }
+                
+                // Sample detail texture and adjust contrast
+                float4 irisDetail = tex2D(_IrisTexture, detailUV);
+                irisDetail.rgb = saturate(((irisDetail.rgb - 0.5) * _IrisTextureContrast) + 0.5);
+                
+                // Blend with rainbow color
+                rainbowColor.rgb = lerp(rainbowColor.rgb, rainbowColor.rgb * irisDetail.rgb, _IrisTextureIntensity);
+                #endif
+                
+                // ============= Dynamic Sparkles =============
+                #if _ENABLE_SPARKLE
+                // Audio-reactive sparkle intensity
+                float audioSparkleIntensity = _IrisSparkleIntensity * (0.5 + highMid * 0.5);
+                
+                // Generate dynamic sparkles
+                float sparkleEffect = generateSparkles(i.uv, _Time.y) * audioSparkleIntensity;
+                
+                // Add sparkles to rainbow color
+                rainbowColor.rgb += _SparkleColor.rgb * sparkleEffect;
                 #endif
                 
                 // ============= Infinite Mirror Depth Effect =============
@@ -448,6 +581,17 @@ Shader "Custom/RainbowHeartburstIris" {
                 }
                 #endif
                 
+                // ============= Limbal Ring (Iris Outline) =============
+                float limbalRingMask = 0;
+                
+                #if _ENABLE_LIMBAL_RING
+                // Create a soft ring mask
+                float edgeDist = 1.0 - smoothstep(0.5 - _LimbalRingWidth - _LimbalRingSoftness, 
+                                                  0.5 - _LimbalRingWidth, 
+                                                  dist);
+                limbalRingMask = edgeDist;
+                #endif
+                
                 // ============= Combine Effects =============
                 // Start with base rainbow color
                 float4 finalColor = rainbowColor;
@@ -486,6 +630,11 @@ Shader "Custom/RainbowHeartburstIris" {
                 
                 // Choose between blend modes
                 finalColor = lerp(alphaBlend, overlayBlend, _HeartBlendMode);
+                #endif
+                
+                // Apply limbal ring
+                #if _ENABLE_LIMBAL_RING
+                finalColor.rgb = lerp(finalColor.rgb, _LimbalRingColor.rgb, limbalRingMask * _LimbalRingColor.a);
                 #endif
                 
                 // ============= Apply Environment Lighting =============

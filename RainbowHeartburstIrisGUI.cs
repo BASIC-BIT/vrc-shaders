@@ -16,6 +16,9 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
     private MaterialProperty _EnableSunburst;
     private MaterialProperty _EnableMirror;
     private MaterialProperty _RespondToLight;
+    private MaterialProperty _EnableIrisDetail;
+    private MaterialProperty _EnableLimbalRing;
+    private MaterialProperty _EnableSparkle;
     private MaterialProperty _HeartPulseIntensity;
     private MaterialProperty _RingRotationSpeed;
     private MaterialProperty _GlobalParallaxStrength;
@@ -50,8 +53,23 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
         
         EditorGUILayout.Space();
         
+        // Draw Iris Detail section
+        DrawIrisDetailSection(materialEditor, material, properties);
+        
+        EditorGUILayout.Space();
+        
+        // Draw Limbal Ring section
+        DrawLimbalRingSection(materialEditor, material, properties);
+        
+        EditorGUILayout.Space();
+        
         // Draw Noise section
         DrawNoiseSection(materialEditor, material, properties);
+        
+        EditorGUILayout.Space();
+        
+        // Draw Sparkle section
+        DrawSparkleSection(materialEditor, material, properties);
         
         EditorGUILayout.Space();
         
@@ -78,6 +96,9 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
         _EnableSunburst = FindProperty("_EnableSunburst", properties);
         _EnableMirror = FindProperty("_EnableMirror", properties);
         _RespondToLight = FindProperty("_RespondToLight", properties);
+        _EnableIrisDetail = FindProperty("_EnableIrisDetail", properties);
+        _EnableLimbalRing = FindProperty("_EnableLimbalRing", properties);
+        _EnableSparkle = FindProperty("_EnableSparkle", properties);
         _HeartPulseIntensity = FindProperty("_HeartPulseIntensity", properties);
         _RingRotationSpeed = FindProperty("_RingRotationSpeed", properties);
         _GlobalParallaxStrength = FindProperty("_GlobalParallaxStrength", properties);
@@ -183,6 +204,68 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
         }
     }
 
+    private void DrawIrisDetailSection(MaterialEditor materialEditor, Material material, MaterialProperty[] properties)
+    {
+        // Use the toggle as the section header
+        bool toggleValue = _EnableIrisDetail.floatValue > 0.5f;
+        EditorGUILayout.BeginHorizontal();
+        bool newToggleValue = EditorGUILayout.ToggleLeft("Iris Detail", toggleValue, EditorStyles.boldLabel);
+        EditorGUILayout.EndHorizontal();
+        
+        // Update shader keyword if toggle changed
+        if (newToggleValue != toggleValue)
+        {
+            _EnableIrisDetail.floatValue = newToggleValue ? 1.0f : 0.0f;
+            SetKeyword(material, "_ENABLE_IRIS_DETAIL", newToggleValue);
+        }
+        
+        // Draw properties if enabled
+        if (newToggleValue)
+        {
+            EditorGUI.indentLevel++;
+            
+            // Basic texture settings
+            materialEditor.TexturePropertySingleLine(new GUIContent("Iris Texture"), FindProperty("_IrisTexture", properties));
+            materialEditor.ShaderProperty(FindProperty("_IrisTextureIntensity", properties), "Texture Intensity");
+            materialEditor.ShaderProperty(FindProperty("_IrisTextureContrast", properties), "Texture Contrast");
+            
+            // Pattern settings
+            materialEditor.ShaderProperty(FindProperty("_IrisRadialPattern", properties), "Radial Pattern Mode");
+            materialEditor.ShaderProperty(FindProperty("_IrisPatternRotation", properties), "Pattern Rotation");
+            materialEditor.ShaderProperty(FindProperty("_IrisDetailParallax", properties), "Detail Parallax");
+            
+            EditorGUI.indentLevel--;
+        }
+    }
+
+    private void DrawLimbalRingSection(MaterialEditor materialEditor, Material material, MaterialProperty[] properties)
+    {
+        // Use the toggle as the section header
+        bool toggleValue = _EnableLimbalRing.floatValue > 0.5f;
+        EditorGUILayout.BeginHorizontal();
+        bool newToggleValue = EditorGUILayout.ToggleLeft("Limbal Ring", toggleValue, EditorStyles.boldLabel);
+        EditorGUILayout.EndHorizontal();
+        
+        // Update shader keyword if toggle changed
+        if (newToggleValue != toggleValue)
+        {
+            _EnableLimbalRing.floatValue = newToggleValue ? 1.0f : 0.0f;
+            SetKeyword(material, "_ENABLE_LIMBAL_RING", newToggleValue);
+        }
+        
+        // Draw properties if enabled
+        if (newToggleValue)
+        {
+            EditorGUI.indentLevel++;
+            
+            materialEditor.ShaderProperty(FindProperty("_LimbalRingColor", properties), "Ring Color");
+            materialEditor.ShaderProperty(FindProperty("_LimbalRingWidth", properties), "Ring Width");
+            materialEditor.ShaderProperty(FindProperty("_LimbalRingSoftness", properties), "Ring Softness");
+            
+            EditorGUI.indentLevel--;
+        }
+    }
+
     private void DrawNoiseSection(MaterialEditor materialEditor, Material material, MaterialProperty[] properties)
     {
         // Use the toggle as the section header
@@ -202,10 +285,56 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
         if (newToggleValue)
         {
             EditorGUI.indentLevel++;
+            
+            // Basic noise settings
             materialEditor.TexturePropertySingleLine(new GUIContent("Noise Texture"), FindProperty("_NoiseTexture", properties));
             materialEditor.ShaderProperty(FindProperty("_IrisNoiseIntensity", properties), "Noise Intensity");
             materialEditor.ShaderProperty(FindProperty("_IrisNoiseScale", properties), "Noise Scale");
-            materialEditor.ShaderProperty(FindProperty("_IrisNoiseSpeed", properties), "Animation Speed");
+            
+            // Advanced flow settings
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Flow Animation", EditorStyles.boldLabel);
+            
+            materialEditor.ShaderProperty(FindProperty("_NoiseFlowSpeed", properties), "Flow Speed");
+            materialEditor.ShaderProperty(FindProperty("_DynamicNoiseMovement", properties), "Dynamic Flow Movement");
+            
+            // Only show distortion settings if dynamic flow is enabled
+            if (material.GetFloat("_DynamicNoiseMovement") > 0.5f)
+            {
+                materialEditor.ShaderProperty(FindProperty("_NoiseDistortionScale", properties), "Flow Distortion Scale");
+                materialEditor.ShaderProperty(FindProperty("_NoiseDistortionAmount", properties), "Flow Distortion Amount");
+            }
+            
+            EditorGUI.indentLevel--;
+        }
+    }
+
+    private void DrawSparkleSection(MaterialEditor materialEditor, Material material, MaterialProperty[] properties)
+    {
+        // Use the toggle as the section header
+        bool toggleValue = _EnableSparkle.floatValue > 0.5f;
+        EditorGUILayout.BeginHorizontal();
+        bool newToggleValue = EditorGUILayout.ToggleLeft("Sparkle Effects", toggleValue, EditorStyles.boldLabel);
+        EditorGUILayout.EndHorizontal();
+        
+        // Update shader keyword if toggle changed
+        if (newToggleValue != toggleValue)
+        {
+            _EnableSparkle.floatValue = newToggleValue ? 1.0f : 0.0f;
+            SetKeyword(material, "_ENABLE_SPARKLE", newToggleValue);
+        }
+        
+        // Draw properties if enabled
+        if (newToggleValue)
+        {
+            EditorGUI.indentLevel++;
+            
+            materialEditor.ShaderProperty(FindProperty("_SparkleColor", properties), "Sparkle Color");
+            materialEditor.ShaderProperty(FindProperty("_SparkleScale", properties), "Sparkle Scale");
+            materialEditor.ShaderProperty(FindProperty("_SparkleSpeed", properties), "Sparkle Speed");
+            materialEditor.ShaderProperty(FindProperty("_SparkleAmount", properties), "Sparkle Amount");
+            materialEditor.ShaderProperty(FindProperty("_SparkleSharpness", properties), "Sparkle Sharpness");
+            
             EditorGUI.indentLevel--;
         }
     }
