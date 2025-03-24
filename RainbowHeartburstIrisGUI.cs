@@ -8,6 +8,7 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
     // Keep track of foldout states
     private bool showAnimationControls = true;
     private bool showParallaxControls = true;
+    private bool showGlobalUVControls = true;
     
     // Material properties
     private MaterialProperty _EnableHeart;
@@ -22,6 +23,9 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
     private MaterialProperty _HeartPulseIntensity;
     private MaterialProperty _RingRotationSpeed;
     private MaterialProperty _GlobalParallaxStrength;
+    private MaterialProperty _GlobalOffsetX;
+    private MaterialProperty _GlobalOffsetY;
+    private MaterialProperty _GlobalScale;
 
     public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] properties)
     {
@@ -35,6 +39,11 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
         
         // Draw animation controls
         DrawAnimationControls(materialEditor, material);
+        
+        EditorGUILayout.Space();
+        
+        // Draw Global UV Controls
+        DrawGlobalUVControls(materialEditor, material);
         
         EditorGUILayout.Space();
         
@@ -102,6 +111,128 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
         _HeartPulseIntensity = FindProperty("_HeartPulseIntensity", properties);
         _RingRotationSpeed = FindProperty("_RingRotationSpeed", properties);
         _GlobalParallaxStrength = FindProperty("_GlobalParallaxStrength", properties);
+        _GlobalOffsetX = FindProperty("_GlobalOffsetX", properties);
+        _GlobalOffsetY = FindProperty("_GlobalOffsetY", properties);
+        _GlobalScale = FindProperty("_GlobalScale", properties);
+    }
+    
+    // Helper method to draw a texture property with tiling and offset fields
+    private void TexturePropertyWithTilingOffset(MaterialEditor materialEditor, GUIContent label, MaterialProperty textureProp, MaterialProperty tilingOffsetProp) 
+    {
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        
+        // Draw the texture field
+        materialEditor.TexturePropertySingleLine(label, textureProp);
+        
+        // Draw tiling and offset fields if the texture is assigned
+        if (textureProp.textureValue != null) 
+        {
+            EditorGUI.indentLevel++;
+            
+            // Get the current tiling/offset value
+            Vector4 tilingOffset = tilingOffsetProp.vectorValue;
+            
+            // Create fields for tiling
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("Tiling");
+            
+            // Create fields for X and Y
+            EditorGUI.BeginChangeCheck();
+            float tilingX = EditorGUILayout.FloatField(tilingOffset.x);
+            float tilingY = EditorGUILayout.FloatField(tilingOffset.y);
+            if (EditorGUI.EndChangeCheck()) 
+            {
+                tilingOffset.x = tilingX;
+                tilingOffset.y = tilingY;
+                tilingOffsetProp.vectorValue = tilingOffset;
+            }
+            EditorGUILayout.EndHorizontal();
+            
+            // Create fields for offset
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("Offset");
+            
+            // Create fields for X and Y offset
+            EditorGUI.BeginChangeCheck();
+            float offsetX = EditorGUILayout.FloatField(tilingOffset.z);
+            float offsetY = EditorGUILayout.FloatField(tilingOffset.w);
+            if (EditorGUI.EndChangeCheck()) 
+            {
+                tilingOffset.z = offsetX;
+                tilingOffset.w = offsetY;
+                tilingOffsetProp.vectorValue = tilingOffset;
+            }
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUI.indentLevel--;
+        }
+        
+        EditorGUILayout.EndVertical();
+    }
+    
+    // Helper method to draw HSV controls
+    private void DrawHSVControls(MaterialEditor materialEditor, MaterialProperty hueProp, MaterialProperty satProp, MaterialProperty brightProp)
+    {
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        EditorGUILayout.LabelField("HSV Adjustment", EditorStyles.boldLabel);
+        
+        EditorGUI.indentLevel++;
+        materialEditor.ShaderProperty(hueProp, "Hue Shift");
+        materialEditor.ShaderProperty(satProp, "Saturation");
+        materialEditor.ShaderProperty(brightProp, "Brightness");
+        EditorGUI.indentLevel--;
+        
+        EditorGUILayout.EndVertical();
+    }
+    
+    private void DrawGlobalUVControls(MaterialEditor materialEditor, Material material)
+    {
+        // Draw Global UV Controls header
+        showGlobalUVControls = EditorGUILayout.BeginFoldoutHeaderGroup(showGlobalUVControls, "Global UV Controls");
+        
+        if (showGlobalUVControls)
+        {
+            EditorGUI.indentLevel++;
+            
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("Position", EditorStyles.boldLabel);
+            
+            // Position controls with reset button
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel("Offset");
+            EditorGUI.BeginChangeCheck();
+            float offsetX = EditorGUILayout.FloatField(_GlobalOffsetX.floatValue);
+            float offsetY = EditorGUILayout.FloatField(_GlobalOffsetY.floatValue);
+            
+            if (GUILayout.Button("Reset", GUILayout.Width(50)))
+            {
+                offsetX = 0;
+                offsetY = 0;
+            }
+            
+            if (EditorGUI.EndChangeCheck())
+            {
+                _GlobalOffsetX.floatValue = offsetX;
+                _GlobalOffsetY.floatValue = offsetY;
+            }
+            EditorGUILayout.EndHorizontal();
+            
+            // Scale control with reset button
+            EditorGUILayout.BeginHorizontal();
+            materialEditor.ShaderProperty(_GlobalScale, "Scale");
+            
+            if (GUILayout.Button("Reset", GUILayout.Width(50)))
+            {
+                _GlobalScale.floatValue = 1.0f;
+            }
+            EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.EndVertical();
+            
+            EditorGUI.indentLevel--;
+        }
+        
+        EditorGUILayout.EndFoldoutHeaderGroup();
     }
 
     private void DrawAnimationControls(MaterialEditor materialEditor, Material material)
@@ -160,8 +291,31 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
         if (newToggleValue)
         {
             EditorGUI.indentLevel++;
-            materialEditor.TexturePropertySingleLine(new GUIContent("Heart Texture"), FindProperty("_HeartTexture", properties));
-            materialEditor.ShaderProperty(FindProperty("_HeartPupilColor", properties), "Heart Color");
+            
+            // Draw texture with tiling/offset
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.HelpBox("Heart texture provides both the shape (alpha) and color (RGB).", MessageType.Info);
+            
+            TexturePropertyWithTilingOffset(
+                materialEditor, 
+                new GUIContent("Heart Texture"), 
+                FindProperty("_HeartTexture", properties),
+                FindProperty("_HeartTextureTiling", properties)
+            );
+            EditorGUILayout.EndVertical();
+            
+            materialEditor.ShaderProperty(FindProperty("_HeartPupilColor", properties), "Heart Color Tint");
+            
+            // Draw HSV controls
+            DrawHSVControls(
+                materialEditor,
+                FindProperty("_HeartHue", properties),
+                FindProperty("_HeartSaturation", properties),
+                FindProperty("_HeartBrightness", properties)
+            );
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Size & Position", EditorStyles.boldLabel);
             materialEditor.ShaderProperty(FindProperty("_HeartPupilSize", properties), "Heart Size");
             materialEditor.ShaderProperty(FindProperty("_HeartPositionX", properties), "Position X");
             materialEditor.ShaderProperty(FindProperty("_HeartPositionY", properties), "Position Y");
@@ -198,8 +352,20 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
         {
             EditorGUI.indentLevel++;
             materialEditor.TexturePropertySingleLine(new GUIContent("Rainbow Gradient"), FindProperty("_RainbowGradientTex", properties));
+            
+            // Draw HSV controls
+            DrawHSVControls(
+                materialEditor,
+                FindProperty("_RainbowHue", properties),
+                FindProperty("_RainbowSaturation", properties),
+                FindProperty("_RainbowBrightness", properties)
+            );
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Pattern Settings", EditorStyles.boldLabel);
             materialEditor.ShaderProperty(FindProperty("_RingCount", properties), "Ring Count");
             materialEditor.ShaderProperty(FindProperty("_IrisSparkleIntensity", properties), "Sparkle Intensity");
+            
             EditorGUI.indentLevel--;
         }
     }
@@ -224,12 +390,20 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
         {
             EditorGUI.indentLevel++;
             
-            // Basic texture settings
-            materialEditor.TexturePropertySingleLine(new GUIContent("Iris Texture"), FindProperty("_IrisTexture", properties));
+            // Draw texture with tiling/offset
+            TexturePropertyWithTilingOffset(
+                materialEditor, 
+                new GUIContent("Iris Texture"), 
+                FindProperty("_IrisTexture", properties),
+                FindProperty("_IrisTextureTiling", properties)
+            );
+            
             materialEditor.ShaderProperty(FindProperty("_IrisTextureIntensity", properties), "Texture Intensity");
             materialEditor.ShaderProperty(FindProperty("_IrisTextureContrast", properties), "Texture Contrast");
             
             // Pattern settings
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Pattern Settings", EditorStyles.boldLabel);
             materialEditor.ShaderProperty(FindProperty("_IrisRadialPattern", properties), "Radial Pattern Mode");
             materialEditor.ShaderProperty(FindProperty("_IrisPatternRotation", properties), "Pattern Rotation");
             materialEditor.ShaderProperty(FindProperty("_IrisDetailParallax", properties), "Detail Parallax");
@@ -259,6 +433,17 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
             EditorGUI.indentLevel++;
             
             materialEditor.ShaderProperty(FindProperty("_LimbalRingColor", properties), "Ring Color");
+            
+            // Draw HSV controls
+            DrawHSVControls(
+                materialEditor,
+                FindProperty("_LimbalRingHue", properties),
+                FindProperty("_LimbalRingSaturation", properties),
+                FindProperty("_LimbalRingBrightness", properties)
+            );
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Size Settings", EditorStyles.boldLabel);
             materialEditor.ShaderProperty(FindProperty("_LimbalRingWidth", properties), "Ring Width");
             materialEditor.ShaderProperty(FindProperty("_LimbalRingSoftness", properties), "Ring Softness");
             
@@ -286,8 +471,14 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
         {
             EditorGUI.indentLevel++;
             
-            // Basic noise settings
-            materialEditor.TexturePropertySingleLine(new GUIContent("Noise Texture"), FindProperty("_NoiseTexture", properties));
+            // Draw texture with tiling/offset
+            TexturePropertyWithTilingOffset(
+                materialEditor, 
+                new GUIContent("Noise Texture"), 
+                FindProperty("_NoiseTexture", properties),
+                FindProperty("_NoiseTextureTiling", properties)
+            );
+            
             materialEditor.ShaderProperty(FindProperty("_IrisNoiseIntensity", properties), "Noise Intensity");
             materialEditor.ShaderProperty(FindProperty("_IrisNoiseScale", properties), "Noise Scale");
             
@@ -330,6 +521,17 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
             EditorGUI.indentLevel++;
             
             materialEditor.ShaderProperty(FindProperty("_SparkleColor", properties), "Sparkle Color");
+            
+            // Draw HSV controls
+            DrawHSVControls(
+                materialEditor,
+                FindProperty("_SparkleHue", properties),
+                FindProperty("_SparkleSaturation", properties),
+                FindProperty("_SparkleBrightness", properties)
+            );
+            
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Pattern Settings", EditorStyles.boldLabel);
             materialEditor.ShaderProperty(FindProperty("_SparkleScale", properties), "Sparkle Scale");
             materialEditor.ShaderProperty(FindProperty("_SparkleSpeed", properties), "Sparkle Speed");
             materialEditor.ShaderProperty(FindProperty("_SparkleAmount", properties), "Sparkle Amount");

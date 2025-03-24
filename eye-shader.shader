@@ -8,11 +8,23 @@ Shader "Custom/RainbowHeartburstIris" {
         _RingRotationSpeed ("Ring Rotation Speed", Range(0,1)) = 0.3
         
         [Space(10)]
+        [Header(Global UV Controls)]
+        _GlobalOffsetX ("Global Offset X", Range(-1, 1)) = 0
+        _GlobalOffsetY ("Global Offset Y", Range(-1, 1)) = 0
+        _GlobalScale ("Global Scale", Range(0.5, 2)) = 1
+        
+        [Space(10)]
         [Header(Heart Pupil)]
         [Toggle(_ENABLE_HEART)] _EnableHeart("Enable Heart Pupil", Float) = 1
         [Space(5)]
-        _HeartTexture ("Heart Texture", 2D) = "white" {}
+        [NoScaleOffset] _HeartTexture ("Heart Texture", 2D) = "white" {}
+        _HeartTextureTiling ("Heart Tiling", Vector) = (1,1,0,0)
         _HeartPupilColor ("Heart Color", Color) = (0.1, 0.02, 0.05, 1)
+        [Header(Heart HSV)]
+        _HeartHue ("Heart Hue Shift", Range(0, 1)) = 0
+        _HeartSaturation ("Heart Saturation", Range(0, 2)) = 1
+        _HeartBrightness ("Heart Brightness", Range(0, 2)) = 1
+        [Header(Heart Size & Position)]
         _HeartPupilSize ("Heart Size", Range(0.1, 0.5)) = 0.2
         _HeartPositionX ("Position X", Range(-0.5, 0.5)) = 0
         _HeartPositionY ("Position Y", Range(-0.5, 0.5)) = 0
@@ -25,7 +37,12 @@ Shader "Custom/RainbowHeartburstIris" {
         [Header(Rainbow Iris)]
         [Toggle(_ENABLE_RAINBOW)] _EnableRainbow("Enable Rainbow Iris", Float) = 1
         [Space(5)]
-        _RainbowGradientTex ("Rainbow Gradient", 2D) = "white" {}
+        [NoScaleOffset] _RainbowGradientTex ("Rainbow Gradient", 2D) = "white" {}
+        [Header(Rainbow HSV)]
+        _RainbowHue ("Rainbow Hue Shift", Range(0, 1)) = 0
+        _RainbowSaturation ("Rainbow Saturation", Range(0, 2)) = 1
+        _RainbowBrightness ("Rainbow Brightness", Range(0, 2)) = 1
+        [Header(Rainbow Pattern)]
         _RingCount ("Ring Count", Range(1, 20)) = 10
         _IrisSparkleIntensity ("Sparkle Intensity", Range(0, 1)) = 0.5
         
@@ -33,7 +50,8 @@ Shader "Custom/RainbowHeartburstIris" {
         [Header(Iris Detail)]
         [Toggle(_ENABLE_IRIS_DETAIL)] _EnableIrisDetail("Enable Iris Detail", Float) = 1
         [Space(5)]
-        _IrisTexture ("Iris Texture", 2D) = "white" {}
+        [NoScaleOffset] _IrisTexture ("Iris Texture", 2D) = "white" {}
+        _IrisTextureTiling ("Iris Tiling", Vector) = (1,1,0,0)
         _IrisTextureIntensity ("Texture Intensity", Range(0, 1)) = 0.5
         _IrisTextureContrast ("Texture Contrast", Range(0, 2)) = 1
         [Toggle] _IrisRadialPattern ("Radial Pattern Mode", Float) = 1
@@ -45,6 +63,11 @@ Shader "Custom/RainbowHeartburstIris" {
         [Toggle(_ENABLE_LIMBAL_RING)] _EnableLimbalRing("Enable Limbal Ring", Float) = 1
         [Space(5)]
         _LimbalRingColor ("Ring Color", Color) = (0.05, 0.04, 0.03, 1)
+        [Header(Limbal Ring HSV)]
+        _LimbalRingHue ("Limbal Ring Hue Shift", Range(0, 1)) = 0
+        _LimbalRingSaturation ("Limbal Ring Saturation", Range(0, 2)) = 1
+        _LimbalRingBrightness ("Limbal Ring Brightness", Range(0, 2)) = 1
+        [Header(Limbal Ring Size)]
         _LimbalRingWidth ("Ring Width", Range(0.01, 0.2)) = 0.05
         _LimbalRingSoftness ("Ring Softness", Range(0, 0.1)) = 0.02
         
@@ -52,7 +75,8 @@ Shader "Custom/RainbowHeartburstIris" {
         [Header(Noise Effects)]
         [Toggle(_ENABLE_NOISE)] _EnableNoise("Enable Noise Effects", Float) = 1
         [Space(5)]
-        _NoiseTexture ("Noise Texture", 2D) = "black" {}
+        [NoScaleOffset] _NoiseTexture ("Noise Texture", 2D) = "black" {}
+        _NoiseTextureTiling ("Noise Tiling", Vector) = (1,1,0,0)
         _IrisNoiseIntensity ("Noise Intensity", Range(0, 1)) = 0.3
         _IrisNoiseScale ("Noise Scale", Range(0.1, 10)) = 4
         _NoiseFlowSpeed ("Flow Speed", Range(0, 1)) = 0.2
@@ -65,6 +89,11 @@ Shader "Custom/RainbowHeartburstIris" {
         [Toggle(_ENABLE_SPARKLE)] _EnableSparkle("Enable Sparkle Effects", Float) = 1
         [Space(5)]
         _SparkleColor ("Sparkle Color", Color) = (1, 1, 1, 1)
+        [Header(Sparkle HSV)]
+        _SparkleHue ("Sparkle Hue Shift", Range(0, 1)) = 0
+        _SparkleSaturation ("Sparkle Saturation", Range(0, 2)) = 1
+        _SparkleBrightness ("Sparkle Brightness", Range(0, 2)) = 1
+        [Header(Sparkle Pattern)]
         _SparkleScale ("Sparkle Scale", Range(1, 50)) = 20
         _SparkleSpeed ("Sparkle Speed", Range(0, 5)) = 1
         _SparkleAmount ("Sparkle Amount", Range(0, 1)) = 0.5
@@ -139,6 +168,7 @@ Shader "Custom/RainbowHeartburstIris" {
             // Heart pupil properties
             uniform float4 _HeartPupilColor;
             uniform sampler2D _HeartTexture;
+            uniform float4 _HeartTextureTiling;
             uniform float _HeartPupilSize;
             uniform float _HeartPositionX;
             uniform float _HeartPositionY;
@@ -146,14 +176,21 @@ Shader "Custom/RainbowHeartburstIris" {
             uniform float _HeartGradientAmount;
             uniform float _HeartParallaxStrength;
             uniform float _HeartParallaxHeight;
+            uniform float _HeartHue;
+            uniform float _HeartSaturation;
+            uniform float _HeartBrightness;
             
             // Rainbow iris properties
             uniform sampler2D _RainbowGradientTex;
             uniform float _RingCount;
             uniform float _IrisSparkleIntensity;
+            uniform float _RainbowHue;
+            uniform float _RainbowSaturation;
+            uniform float _RainbowBrightness;
             
             // Iris detail properties
             uniform sampler2D _IrisTexture;
+            uniform float4 _IrisTextureTiling;
             uniform float _IrisTextureIntensity;
             uniform float _IrisTextureContrast;
             uniform float _IrisRadialPattern;
@@ -164,9 +201,13 @@ Shader "Custom/RainbowHeartburstIris" {
             uniform float4 _LimbalRingColor;
             uniform float _LimbalRingWidth;
             uniform float _LimbalRingSoftness;
+            uniform float _LimbalRingHue;
+            uniform float _LimbalRingSaturation;
+            uniform float _LimbalRingBrightness;
             
             // Noise properties
             uniform sampler2D _NoiseTexture;
+            uniform float4 _NoiseTextureTiling;
             uniform float _IrisNoiseIntensity;
             uniform float _IrisNoiseScale;
             uniform float _NoiseFlowSpeed;
@@ -180,6 +221,9 @@ Shader "Custom/RainbowHeartburstIris" {
             uniform float _SparkleSpeed;
             uniform float _SparkleAmount;
             uniform float _SparkleSharpness;
+            uniform float _SparkleHue;
+            uniform float _SparkleSaturation;
+            uniform float _SparkleBrightness;
             
             // Infinite mirror properties
             uniform float _InfiniteDepthStrength;
@@ -198,6 +242,11 @@ Shader "Custom/RainbowHeartburstIris" {
             // Parallax controls
             uniform float _GlobalParallaxStrength;
             uniform float _RainbowParallaxStrength;
+            
+            // Global UV controls
+            uniform float _GlobalOffsetX;
+            uniform float _GlobalOffsetY;
+            uniform float _GlobalScale;
             
             // AudioLink texture
             uniform sampler2D _AudioLink;
@@ -224,8 +273,43 @@ Shader "Custom/RainbowHeartburstIris" {
                 return mul(rotMatrix, uv);
             }
             
-            // Get heart mask from texture with parallax effect
-            float getHeartMask(float2 uv, float size, float3 viewDir) {
+            // Apply tiling and offset to UVs
+            float2 ApplyTilingOffset(float2 uv, float4 tilingOffset) {
+                return frac(uv * tilingOffset.xy) + tilingOffset.zw;
+            }
+            
+            // Convert RGB to HSV
+            float3 RGBtoHSV(float3 c) {
+                float4 K = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+                float4 p = lerp(float4(c.bg, K.wz), float4(c.gb, K.xy), step(c.b, c.g));
+                float4 q = lerp(float4(p.xyw, c.r), float4(c.r, p.yzx), step(p.x, c.r));
+                
+                float d = q.x - min(q.w, q.y);
+                float e = 1.0e-10;
+                return float3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+            }
+            
+            // Convert HSV to RGB
+            float3 HSVtoRGB(float3 c) {
+                float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+                float3 p = abs(frac(c.xxx + K.xyz) * 6.0 - K.www);
+                return c.z * lerp(K.xxx, saturate(p - K.xxx), c.y);
+            }
+            
+            // Apply HSV adjustment to a color
+            float3 AdjustHSV(float3 color, float hueShift, float satAdjust, float valueAdjust) {
+                float3 hsv = RGBtoHSV(color);
+                
+                // Apply adjustments
+                hsv.x = frac(hsv.x + hueShift); // Hue shift
+                hsv.y = saturate(hsv.y * satAdjust); // Saturation
+                hsv.z = saturate(hsv.z * valueAdjust); // Value/Brightness
+                
+                return HSVtoRGB(hsv);
+            }
+            
+            // Modify the getHeartMask function to return both the mask and color
+            float4 getHeartTexture(float2 uv, float size, float3 viewDir) {
                 // Calculate parallax offset based on view direction and simulated height
                 float2 parallaxOffset = float2(0,0);
                 #if _ENABLE_HEART
@@ -238,15 +322,18 @@ Shader "Custom/RainbowHeartburstIris" {
                 // Scale the UVs for sizing (we need to work in 0-1 UV space)
                 float2 scaledUV = (heartUV - 0.5) / size + 0.5;
                 
-                // Sample the heart texture's alpha channel as the mask
-                float heartMask = 0;
+                // We'll use the _HeartTextureTiling for custom scaling only, not for repeating
+                scaledUV = scaledUV * _HeartTextureTiling.xy + _HeartTextureTiling.zw;
                 
-                // Only sample if UVs are within 0-1 range
+                // Sample the heart texture's color and alpha
+                float4 heartTexture = float4(0,0,0,0);
+                
+                // Only sample if UVs are within 0-1 range - PREVENT TILING
                 if (scaledUV.x >= 0 && scaledUV.x <= 1 && scaledUV.y >= 0 && scaledUV.y <= 1) {
-                    heartMask = tex2D(_HeartTexture, scaledUV).a;
+                    heartTexture = tex2D(_HeartTexture, scaledUV);
                 }
                 
-                return heartMask;
+                return heartTexture;
             }
             
             // Simple multi-tap blur function
@@ -270,6 +357,7 @@ Shader "Custom/RainbowHeartburstIris" {
             
             // Perlin-like noise functions
             float noise(float2 uv) {
+                uv = ApplyTilingOffset(uv, _NoiseTextureTiling);
                 return tex2D(_NoiseTexture, uv).r;
             }
             
@@ -304,23 +392,29 @@ Shader "Custom/RainbowHeartburstIris" {
             // Generate sparkles effect
             float generateSparkles(float2 uv, float time) {
                 // Create several layers of noise at different scales for sparkle effect
-                float n1 = fractalNoise(uv * _SparkleScale + time * _SparkleSpeed, 3);
-                float n2 = fractalNoise(uv * (_SparkleScale * 0.5) - time * _SparkleSpeed * 0.7, 2);
+                float n1 = fractalNoise(uv * _SparkleScale + float2(time * _SparkleSpeed, 0), 2);
+                float n2 = fractalNoise(uv * (_SparkleScale * 0.75) - float2(0, time * _SparkleSpeed * 0.7), 2);
+                float n3 = fractalNoise(uv * (_SparkleScale * 1.25) + float2(time * _SparkleSpeed * 0.3, time * _SparkleSpeed * 0.3), 2);
                 
-                // Combine noise layers and sharpen
-                float sparkle = n1 * n2;
-                sparkle = pow(sparkle, _SparkleSharpness);
+                // Combine noise layers for more interesting patterns
+                float sparkle = n1 * n2 * n3;
                 
-                // Threshold to control amount
-                sparkle = saturate((sparkle - (1.0 - _SparkleAmount)) / _SparkleAmount);
+                // Further enhance contrast and sharpness
+                sparkle = saturate(pow(sparkle, _SparkleSharpness));
                 
-                return sparkle;
+                // Use a higher threshold for more dramatic sparkles
+                return step(1.0 - _SparkleAmount, sparkle);
             }
             
             v2f vert (appdata v) {
                 v2f o;
                 o.pos = UnityObjectToClipPos(v.vertex);
-                o.uv = v.uv;
+                
+                // Apply global UV transformation
+                float2 globalUV = v.uv;
+                globalUV = (globalUV - 0.5) / _GlobalScale + 0.5;
+                globalUV += float2(_GlobalOffsetX, _GlobalOffsetY);
+                o.uv = globalUV;
                 
                 // Calculate view direction for parallax effects
                 float3 worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
@@ -383,17 +477,6 @@ Shader "Custom/RainbowHeartburstIris" {
                 dynamicNoiseIntensity = _IrisNoiseIntensity * (1.0 + highMid * 0.3);
                 #endif
                 
-                // ============= Heart-shaped Pupil =============
-                float heartMask = 0;
-                
-                #if _ENABLE_HEART
-                // Calculate heart size including base size and pulse effect
-                float heartSize = _HeartPupilSize * (1.0 + _HeartPulseIntensity * bass * 0.2);
-                
-                // Get heart mask from texture
-                heartMask = getHeartMask(i.uv, heartSize, i.viewDir);
-                #endif
-                
                 // ============= Rainbow Iris Rings =============
                 float4 rainbowColor = float4(0,0,0,0);
                 
@@ -425,9 +508,13 @@ Shader "Custom/RainbowHeartburstIris" {
                 float2 rainbowUV = float2(ringIndex, 0.5);
                 rainbowColor = tex2D(_RainbowGradientTex, rainbowUV);
                 
+                // Apply HSV adjustments to rainbow color
+                rainbowColor.rgb = AdjustHSV(rainbowColor.rgb, _RainbowHue, _RainbowSaturation, _RainbowBrightness);
+                
                 // Apply iris noise to color
                 #if _ENABLE_NOISE
                 float3 noiseColor = tex2D(_RainbowGradientTex, float2(irisNoise, 0.5)).rgb;
+                noiseColor = AdjustHSV(noiseColor, _RainbowHue, _RainbowSaturation, _RainbowBrightness);
                 rainbowColor.rgb = lerp(rainbowColor.rgb, noiseColor, dynamicNoiseIntensity * 0.2);
                 #endif
                 #else
@@ -456,6 +543,9 @@ Shader "Custom/RainbowHeartburstIris" {
                     detailUV = RotateUV(detailUV - 0.5, _IrisPatternRotation) + 0.5;
                 }
                 
+                // Apply tiling and offset
+                detailUV = ApplyTilingOffset(detailUV, _IrisTextureTiling);
+                
                 // Sample detail texture and adjust contrast
                 float4 irisDetail = tex2D(_IrisTexture, detailUV);
                 irisDetail.rgb = saturate(((irisDetail.rgb - 0.5) * _IrisTextureContrast) + 0.5);
@@ -465,15 +555,20 @@ Shader "Custom/RainbowHeartburstIris" {
                 #endif
                 
                 // ============= Dynamic Sparkles =============
+                float4 sparkleColor = float4(0,0,0,0);
+                
                 #if _ENABLE_SPARKLE
                 // Audio-reactive sparkle intensity
-                float audioSparkleIntensity = _IrisSparkleIntensity * (0.5 + highMid * 0.5);
+                float audioSparkleIntensity = _IrisSparkleIntensity * (0.7 + highMid * 0.5);
                 
                 // Generate dynamic sparkles
-                float sparkleEffect = generateSparkles(i.uv, _Time.y) * audioSparkleIntensity;
+                float sparkleEffect = generateSparkles(i.uv, _Time.y);
                 
-                // Add sparkles to rainbow color
-                rainbowColor.rgb += _SparkleColor.rgb * sparkleEffect;
+                // Create sparkle color with HSV adjustments
+                float3 adjustedSparkleColor = AdjustHSV(_SparkleColor.rgb, _SparkleHue, _SparkleSaturation, _SparkleBrightness);
+                
+                // Scale by audio and make sparkles brighter
+                sparkleColor.rgb = adjustedSparkleColor * sparkleEffect * audioSparkleIntensity * 3.0;
                 #endif
                 
                 // ============= Infinite Mirror Depth Effect =============
@@ -508,7 +603,7 @@ Shader "Custom/RainbowHeartburstIris" {
                     float layerHeartMask = 0;
                     #if _ENABLE_HEART
                     float heartSize = _HeartPupilSize * (1.0 + _HeartPulseIntensity * bass * 0.2);
-                    layerHeartMask = getHeartMask(scaledUV, heartSize, i.viewDir);
+                    layerHeartMask = getHeartTexture(scaledUV, heartSize, i.viewDir).a;
                     #endif
                     
                     // Calculate blur based on depth
@@ -526,6 +621,9 @@ Shader "Custom/RainbowHeartburstIris" {
                     float layerRingIndex = frac(layerDist * _RingCount);
                     float2 layerRainbowUV = float2(layerRingIndex, 0.5);
                     float4 layerColor = SampleWithBlur(_RainbowGradientTex, layerRainbowUV, blurAmount);
+                    
+                    // Apply HSV adjustments to layer color
+                    layerColor.rgb = AdjustHSV(layerColor.rgb, _RainbowHue, _RainbowSaturation, _RainbowBrightness);
                     
                     // Accumulate with depth-based weight
                     float weight = exp(-layerIdx * 0.5);
@@ -577,19 +675,55 @@ Shader "Custom/RainbowHeartburstIris" {
                     float2 streakUV = float2(hue, 0.5);
                     float4 streakColor = tex2D(_RainbowGradientTex, streakUV);
                     
+                    // Apply HSV adjustments to streak color
+                    streakColor.rgb = AdjustHSV(streakColor.rgb, _RainbowHue, _RainbowSaturation, _RainbowBrightness);
+                    
                     sunburstColor += streakMask * streakColor * _SunburstIntensity;
                 }
                 #endif
                 
                 // ============= Limbal Ring (Iris Outline) =============
+                float4 limbalRingColor = float4(0,0,0,0);
                 float limbalRingMask = 0;
                 
                 #if _ENABLE_LIMBAL_RING
-                // Create a soft ring mask
-                float edgeDist = 1.0 - smoothstep(0.5 - _LimbalRingWidth - _LimbalRingSoftness, 
-                                                  0.5 - _LimbalRingWidth, 
-                                                  dist);
-                limbalRingMask = edgeDist;
+                // Create a soft ring mask (FIXED: inverted calculation to make larger values = wider ring)
+                float ringDist = 0.5 - dist;
+                limbalRingMask = smoothstep(0, _LimbalRingSoftness, ringDist) * 
+                                 smoothstep(_LimbalRingWidth, _LimbalRingWidth - _LimbalRingSoftness, ringDist);
+                
+                // Apply HSV adjustments to limbal ring color
+                float3 adjustedRingColor = AdjustHSV(_LimbalRingColor.rgb, _LimbalRingHue, _LimbalRingSaturation, _LimbalRingBrightness);
+                limbalRingColor = float4(adjustedRingColor, _LimbalRingColor.a * limbalRingMask);
+                #endif
+                
+                // ============= Heart-shaped Pupil =============
+                float heartMask = 0;
+                float4 heartColor = float4(0,0,0,0);
+                float4 heartTexture = float4(0,0,0,0);
+                
+                #if _ENABLE_HEART
+                // Calculate heart size including base size and pulse effect
+                float heartSize = _HeartPupilSize * (1.0 + _HeartPulseIntensity * bass * 0.2);
+                
+                // Get heart texture and mask
+                heartTexture = getHeartTexture(i.uv, heartSize, i.viewDir);
+                heartMask = heartTexture.a;
+                
+                // Create a heart color that incorporates the texture
+                heartColor = _HeartPupilColor * float4(heartTexture.rgb, 1.0);
+                
+                // Apply HSV adjustments to heart color
+                heartColor.rgb = AdjustHSV(heartColor.rgb, _HeartHue, _HeartSaturation, _HeartBrightness);
+                
+                // Sample rainbow at heart position for gradient effect
+                float2 heartGradientUV = float2(frac(_Time.y * 0.1), 0.5);
+                float4 heartGradient = tex2D(_RainbowGradientTex, heartGradientUV);
+                heartGradient.rgb = AdjustHSV(heartGradient.rgb, _HeartHue, _HeartSaturation, _HeartBrightness);
+                
+                // Blend heart color with gradient based on parameter
+                heartColor.rgb = lerp(heartColor.rgb, heartGradient.rgb, _HeartGradientAmount);
+                
                 #endif
                 
                 // ============= Combine Effects =============
@@ -603,21 +737,21 @@ Shader "Custom/RainbowHeartburstIris" {
                 
                 // Add sunburst streaks if enabled
                 #if _ENABLE_SUNBURST
-                finalColor += sunburstColor;
+                finalColor.rgb += sunburstColor.rgb;
                 #endif
                 
-                // Apply heart pupil if enabled
+                // Apply sparkle effect if enabled
+                #if _ENABLE_SPARKLE
+                finalColor.rgb += sparkleColor.rgb;
+                #endif
+                
+                // Apply limbal ring (FIXED: now rendered after base iris but before heart pupil)
+                #if _ENABLE_LIMBAL_RING
+                finalColor.rgb = lerp(finalColor.rgb, limbalRingColor.rgb, limbalRingMask * _LimbalRingColor.a);
+                #endif
+                
+                // Apply heart pupil if enabled (rendered last so it's always on top)
                 #if _ENABLE_HEART
-                // Create a heart color that incorporates some of the rainbow gradient
-                float4 heartColor = _HeartPupilColor;
-                
-                // Sample rainbow at heart position for gradient effect
-                float2 heartGradientUV = float2(frac(_Time.y * 0.1), 0.5);
-                float4 heartGradient = tex2D(_RainbowGradientTex, heartGradientUV);
-                
-                // Blend heart color with gradient based on parameter
-                heartColor.rgb = lerp(heartColor.rgb, heartGradient.rgb, _HeartGradientAmount);
-                
                 // Apply heart to final color with transparency from heart color alpha
                 float effectiveHeartOpacity = heartMask * heartColor.a;
                 
@@ -630,11 +764,6 @@ Shader "Custom/RainbowHeartburstIris" {
                 
                 // Choose between blend modes
                 finalColor = lerp(alphaBlend, overlayBlend, _HeartBlendMode);
-                #endif
-                
-                // Apply limbal ring
-                #if _ENABLE_LIMBAL_RING
-                finalColor.rgb = lerp(finalColor.rgb, _LimbalRingColor.rgb, limbalRingMask * _LimbalRingColor.a);
                 #endif
                 
                 // ============= Apply Environment Lighting =============
