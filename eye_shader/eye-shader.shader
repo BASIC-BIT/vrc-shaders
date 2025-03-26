@@ -11,7 +11,8 @@ Shader "Custom/RainbowHeartburstIris" {
         [Header(Global UV Controls)]
         _GlobalOffsetX ("Global Offset X", Range(-1, 1)) = 0
         _GlobalOffsetY ("Global Offset Y", Range(-1, 1)) = 0
-        _GlobalScale ("Global Scale", Range(0.5, 2)) = 1
+        _GlobalScaleX ("Global Scale X", Range(0.5, 2)) = 1
+        _GlobalScaleY ("Global Scale Y", Range(0.5, 2)) = 1
         
         [Space(10)]
         [Header(Heart Pupil)]
@@ -30,7 +31,7 @@ Shader "Custom/RainbowHeartburstIris" {
         _HeartNoiseScale ("Noise Scale", Range(0.1, 10)) = 2
         _HeartNoiseSpeed ("Noise Speed", Range(0, 1)) = 0.2
         [Toggle] _HeartDynamicNoise ("Dynamic Noise", Float) = 0
-        [Header(Heart Size & Position)]
+        [Header(Heart Size and Position)]
         _HeartPupilSize ("Heart Size", Range(0.1, 0.5)) = 0.2
         _HeartPositionX ("Position X", Range(-0.5, 0.5)) = 0
         _HeartPositionY ("Position Y", Range(-0.5, 0.5)) = 0
@@ -257,7 +258,8 @@ Shader "Custom/RainbowHeartburstIris" {
             // Global UV controls
             uniform float _GlobalOffsetX;
             uniform float _GlobalOffsetY;
-            uniform float _GlobalScale;
+            uniform float _GlobalScaleX;
+            uniform float _GlobalScaleY;
             
             // AudioLink texture
             uniform sampler2D _AudioLink;
@@ -446,9 +448,9 @@ Shader "Custom/RainbowHeartburstIris" {
                 v2f o;
                 o.pos = UnityObjectToClipPos(v.vertex);
                 
-                // Apply global UV transformation
+                // Apply global UV transformation with separate X and Y scaling
                 float2 globalUV = v.uv;
-                globalUV = (globalUV - 0.5) / _GlobalScale + 0.5;
+                globalUV = (globalUV - 0.5) / float2(_GlobalScaleX, _GlobalScaleY) + 0.5;
                 globalUV += float2(_GlobalOffsetX, _GlobalOffsetY);
                 o.uv = globalUV;
                 

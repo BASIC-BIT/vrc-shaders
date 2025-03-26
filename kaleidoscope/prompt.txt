@@ -1,0 +1,5 @@
+Take this shader file that was made in GLSL in ShaderToy and convert it to a HLSL ShaderLab shader to be used in Unity and specifically in VRChat using the built-in render pipeline. Be creative with the task and come up with interesting ways to implement audio link really think through your implementation deeply before implementing anything I think the multiple different ways of implementing the creative aspects of this project then implement the shader. 
+
+Make sure to provide a significantly large number of different parameters that can be tuned in-game while you're still using sensible minimums, maximums and defaults so that we can fine tune to get the exact effect we want once we take it over to Unity. 
+
+Here is the original code:

@@ -25,7 +25,8 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
     private MaterialProperty _GlobalParallaxStrength;
     private MaterialProperty _GlobalOffsetX;
     private MaterialProperty _GlobalOffsetY;
-    private MaterialProperty _GlobalScale;
+    private MaterialProperty _GlobalScaleX;
+    private MaterialProperty _GlobalScaleY;
 
     public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] properties)
     {
@@ -113,7 +114,8 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
         _GlobalParallaxStrength = FindProperty("_GlobalParallaxStrength", properties);
         _GlobalOffsetX = FindProperty("_GlobalOffsetX", properties);
         _GlobalOffsetY = FindProperty("_GlobalOffsetY", properties);
-        _GlobalScale = FindProperty("_GlobalScale", properties);
+        _GlobalScaleX = FindProperty("_GlobalScaleX", properties);
+        _GlobalScaleY = FindProperty("_GlobalScaleY", properties);
     }
     
     // Helper method to draw a texture property with tiling and offset fields
@@ -217,13 +219,23 @@ public class RainbowHeartburstIrisGUI : ShaderGUI
             }
             EditorGUILayout.EndHorizontal();
             
-            // Scale control with reset button
+            // Scale controls with reset button
             EditorGUILayout.BeginHorizontal();
-            materialEditor.ShaderProperty(_GlobalScale, "Scale");
+            EditorGUILayout.PrefixLabel("Scale");
+            EditorGUI.BeginChangeCheck();
+            float scaleX = EditorGUILayout.FloatField(_GlobalScaleX.floatValue);
+            float scaleY = EditorGUILayout.FloatField(_GlobalScaleY.floatValue);
             
             if (GUILayout.Button("Reset", GUILayout.Width(50)))
             {
-                _GlobalScale.floatValue = 1.0f;
+                scaleX = 1.0f;
+                scaleY = 1.0f;
+            }
+            
+            if (EditorGUI.EndChangeCheck())
+            {
+                _GlobalScaleX.floatValue = scaleX;
+                _GlobalScaleY.floatValue = scaleY;
             }
             EditorGUILayout.EndHorizontal();
             
