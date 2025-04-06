@@ -129,6 +129,14 @@ Shader "Custom/RainbowHeartburstIris" {
         [Space(5)]
         _EnvironmentLightingAmount ("Lighting Amount", Range(0, 1)) = 0.2
         
+        [Space(10)]
+        [Header(Top Shading)]
+        [Toggle(_ENABLE_TOP_SHADING)] _EnableTopShading("Enable Top Shading", Float) = 1
+        [Space(5)]
+        _TopShadingIntensity ("Intensity", Range(0, 1)) = 0.3
+        _TopShadingHeight ("Height", Range(0, 1)) = 0.5
+        _TopShadingSoftness ("Softness", Range(0.01, 0.5)) = 0.1
+        
         // AudioLink texture (automatically populated by AudioLink system)
         [HideInInspector] _AudioLink ("AudioLink Texture", 2D) = "black" {}
         
@@ -156,6 +164,7 @@ Shader "Custom/RainbowHeartburstIris" {
             
             // Feature toggles
             #pragma shader_feature_local _ENABLE_HEART
+            #pragma shader_feature_local _ENABLE_TOP_SHADING
             #pragma shader_feature_local _ENABLE_RAINBOW
             #pragma shader_feature_local _ENABLE_NOISE
             #pragma shader_feature_local _ENABLE_SUNBURST
@@ -243,6 +252,12 @@ Shader "Custom/RainbowHeartburstIris" {
             uniform float _InfiniteLayerCount;
             uniform float _InfiniteParallaxStrength;
             
+            
+            // Top Shading properties
+            uniform float _EnableTopShading;
+            uniform float _TopShadingIntensity;
+            uniform float _TopShadingHeight;
+            uniform float _TopShadingSoftness;
             // Sunburst properties
             uniform float _SunburstLayerCount;
             uniform float _SunburstRotationSpeed;
@@ -768,6 +783,8 @@ Shader "Custom/RainbowHeartburstIris" {
                 // Start with base rainbow color
                 float4 finalColor = rainbowColor;
                 
+                // Variables will be declared inside the #if block below
+                
                 // Blend in mirror effect if enabled
                 #if _ENABLE_MIRROR
                 finalColor = lerp(finalColor, mirrorColor, 0.5);
@@ -795,15 +812,29 @@ Shader "Custom/RainbowHeartburstIris" {
                 
                 // Mix blending modes between overlay and normal alpha blending
                 float4 overlayBlend = lerp(finalColor, heartColor, effectiveHeartOpacity);
-                float4 alphaBlend = float4(
-                    lerp(finalColor.rgb, heartColor.rgb, effectiveHeartOpacity),
-                    finalColor.a
-                );
+                // Complete the alphaBlend calculation (assuming alpha comes from finalColor)
+                float4 alphaBlend = float4(lerp(finalColor.rgb, heartColor.rgb, effectiveHeartOpacity), finalColor.a);
                 
                 // Choose between blend modes
                 finalColor = lerp(alphaBlend, overlayBlend, _HeartBlendMode);
-                #endif
+                #endif // End of _ENABLE_HEART block
                 
+                // ============= Apply Top Shading =============
+                #if _ENABLE_TOP_SHADING
+                // Calculate the start and end points for the smoothstep gradient
+                half gradientStart = 1.0 - _TopShadingHeight; // UV.y where shading starts to fade in
+                half gradientEnd = gradientStart + _TopShadingSoftness; // UV.y where shading is fully faded in
+                
+                // Calculate the shading factor (0 = full shadow, 1 = no shadow)
+                // We invert the uv.y because typically UVs go 0 at bottom, 1 at top
+                half shadingFactor = smoothstep(gradientStart, gradientEnd, 1.0 - i.uv.y);
+                
+                // Apply intensity (lerp from 1 down towards 0 based on intensity)
+                shadingFactor = lerp(1.0, shadingFactor, _TopShadingIntensity);
+                
+                // Multiply the final color's RGB by the shading factor
+                finalColor.rgb *= shadingFactor;
+                #endif // End _ENABLE_TOP_SHADING
                 // ============= Apply Environment Lighting =============
                 #if _RESPOND_TO_LIGHT
                 fixed3 ambientLight = UNITY_LIGHTMODEL_AMBIENT.rgb;

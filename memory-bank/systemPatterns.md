@@ -16,11 +16,12 @@
     *   **Custom GUI:** A dedicated C# `ShaderGUI` script enhances usability by organizing shader properties into logical foldout sections and managing shader keyword toggles automatically.
     *   **Color Control:** HSV adjustments (Hue, Saturation, Brightness) are provided for major color elements via helper functions, offering flexible color customization.
     *   **Texture Usage:** Uses textures for gradients (`_RainbowGradientTex`), noise patterns (`_NoiseTexture`), iris detail (`_IrisTexture`), and the heart shape/detail (`_HeartTexture`).
+    *   **Procedural Shading:** Added procedural top-down gradient shading based on UV coordinates (`smoothstep`) instead of using a texture mask.
 
 *   **Design Patterns:**
     *   **Uber Shader:** Consolidates multiple effects into one shader file, controlled by properties and feature toggles.
     *   **Custom Editor (C# `ShaderGUI`):** Provides a structured and intuitive interface for tweaking shader parameters in Unity, improving user experience over the default inspector. Manages shader keyword state based on toggles.
-    *   **Procedural Generation:** Employs mathematical formulas and noise functions to create complex visual patterns (rings, streaks, sparkles) dynamically.
+    *   **Procedural Generation:** Employs mathematical formulas (including `smoothstep` for gradients) and noise functions to create complex visual patterns (rings, streaks, sparkles, top shading) dynamically.
     *   **Layered Rendering (Loops):** Builds complex effects like the infinite mirror and sunbursts by iterating in the fragment shader, accumulating results from multiple calculated layers.
     *   **Parallax Mapping (Simple):** Uses view direction to offset UVs, creating an illusion of depth on a flat surface.
     *   **Audio-Reactive Design:** Maps specific AudioLink data streams (filtered bands) to visual parameters (scale, intensity, speed) for synchronized effects.
@@ -34,7 +35,7 @@
     *   AudioLink provides the `_AudioLink` texture, sampled by the shader to drive animations.
     *   View direction (`i.viewDir`) is a key input for all parallax calculations.
     *   Noise functions and the `_NoiseTexture` influence the appearance of the heart, iris rings, and sunbursts.
-    *   The final pixel color is a composite result of blending the outputs of various feature calculations (rainbow, detail, mirror, sunburst, sparkle, limbal ring, heart) in a specific order.
+    *   The final pixel color is a composite result of blending the outputs of various feature calculations (rainbow, detail, mirror, sunburst, sparkle, limbal ring, heart), which is then multiplied by the procedural top shading factor before environmental lighting adjustments.
 
 *   **Critical Implementation Paths:**
     *   **Infinite Mirror Loop:** The fragment shader loop calculating the layered heart mirror effect, involving UV scaling, parallax offset per layer, conditional blurring (`SampleWithBlur`), masking, and weighted color accumulation. Performance is sensitive to `_InfiniteLayerCount`.
@@ -43,5 +44,6 @@
     *   **Parallax Calculations:** Ensuring view-direction based UV offsets are correctly calculated and applied consistently across features, especially for VR stereo rendering.
     *   **Effect Blending:** The final composition stage in the fragment shader where all calculated effects (base iris, mirror, streaks, sparkles, limbal ring, heart) are combined using appropriate blending logic (lerp, addition) to achieve the desired visual layering.
     *   **Shader Feature Management:** Correctly defining `#pragma shader_feature_local` directives and ensuring the `ShaderGUI` script enables/disables the corresponding keywords accurately.
+    *   **Top Shading Gradient:** The `smoothstep` calculation based on `1.0 - i.uv.y` and the `_TopShadingHeight`/`_TopShadingSoftness` parameters to create the adjustable vertical gradient.
 
 *(This file documents the technical design and structure. Refer to projectbrief.md and techContext.md.)*

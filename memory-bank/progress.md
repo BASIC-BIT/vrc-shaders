@@ -15,6 +15,7 @@
     *   **Parallax:** View-direction based parallax implemented across multiple features (Heart, Rainbow, Detail, Mirror, Sunburst).
     *   **Feature Toggles:** Extensive use of `#pragma shader_feature_local` allows enabling/disabling most major features.
     *   **Custom Editor GUI (`RainbowHeartburstIrisGUI.cs`):** A comprehensive C# script provides a structured inspector interface with foldouts, manages feature toggles/keywords, and includes helpers for texture properties and HSV controls.
+    *   **Top Shading:** Implemented procedural top-down gradient shading using `smoothstep` based on `uv.y`. Includes controls for intensity, height, and softness, integrated into the custom GUI and controlled by `_ENABLE_TOP_SHADING` feature toggle.
 
 *   **What's Left to Build:**
     *   **Screen-Space Effects:** The planned heart-shaped bloom and lens flare extending beyond the eye geometry needs verification and potentially further implementation/refinement. (A `GrabPass` is declared but its usage isn't clear in the main fragment logic; a second pass might be needed as per the architecture doc).
@@ -26,6 +27,8 @@
         *   Visual refinement based on in-game testing.
         *   Testing AudioLink reactivity with diverse audio sources.
         *   Investigating potential transparency sorting issues.
+        *   Testing the new Top Shading feature visually and functionally.
+        *   Integrating Top Shading controls into VRChat Expression Parameters/Menus.
     *   **Documentation:** Completing the Memory Bank documentation (currently in progress). Creating user-facing documentation (e.g., setup guide, parameter explanations).
 
 *   **Current Status:** The "Rainbow Heartburst Iris" shader is largely feature-complete in terms of its core HLSL implementation and Unity editor interface. The primary remaining tasks involve VRChat-specific integration (Expression Parameters), comprehensive testing, potential refinement of screen-space effects, and final documentation.
@@ -41,5 +44,6 @@
     *   Decision to use AudioLink for audio reactivity with fallbacks.
     *   Decision to create a custom `ShaderGUI` for usability.
     *   Specific implementation choices detailed in `eye-shader-architecture.md` (e.g., SDF for heart concept, though texture sampling seems to be the final implementation in `.shader`).
+    *   Decision to use procedural gradient for Top Shading feature (vs. texture mask).
 
 *(This file tracks the project's journey, what's done, what's next, and any hurdles. Update alongside activeContext.md.)*

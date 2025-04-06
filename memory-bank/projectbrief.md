@@ -10,6 +10,7 @@
     *   **Screen-Space Effects:** Heart-shaped bloom and lens flare extending beyond the eye, audio-reactive intensity.
     *   **AudioLink Integration:** Reactivity to bass, low-mid, high-mid, and treble frequencies using filtered data for smoothness.
     *   **Environmental Lighting:** Optional reaction to world light color/intensity via animatable parameter.
+    *   **Top Shading:** Procedural gradient shading from the top edge to simulate shadows, customizable intensity/height/softness.
     *   **Customization:** Control key parameters via VRChat Expression Parameters/Menus.
     *   **Platform:** VRChat Avatars 3.0, Unity Built-in Render Pipeline.
     *   **Language:** HLSL for shader code, C# for custom editor GUI (`RainbowHeartburstIrisGUI.cs`).
